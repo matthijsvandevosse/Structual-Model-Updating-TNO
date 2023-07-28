@@ -84,11 +84,11 @@ unmeasDOFs = setdiff(1 : N, measDOFs);
 num_measDOFs = length(measDOFs);
 num_unmeasDOFs = length(unmeasDOFs);
 % expModes.lambdaWeights = [1 1 1];
-expModes.lambdaWeights = [10 10 10 1];
+expModes.lambdaWeights = [10 10 10 10];
 % expModes.psiWeights = [1 1 1];
 expModes.psiWeights = ones(n_modes,1);
 
-expModes.psiWeights = [2000 200 400 10];
+expModes.psiWeights = [2000 200 400 400];
 expModes.resWeights = ones(n_modes,1);
 
 
@@ -208,4 +208,58 @@ ylim([-1.2 1.2])
 title('Fourth Mode')
 end
 
+%% x = [position; velocity]
+Minv = inv(structModel.M0);
+C = [zeros(3,2*N)];
+actDOFs = [237+N/2 427+N/2 188+N/2];
+C(1,measDOFs(1)) = 35000;
+C(2,measDOFs(3)) = 35000;
+C(3,measDOFs(4)) = 35000;
+A = [zeros(N,N) eye(N); -inv(structModel.M0)*Ksolved zeros(N,N)];
+B = [zeros(N,3); Minv(:,actDOFs)];
+%%
+load("Modal_Systeem_V1.mat")
+sys1 = ss(A,B,C,0);
+
+w = logspace(-1,3,250);
+h = freqresp(sys1, w);
+h2 = freqresp(Gmod7, w);
+%%
+figure
+subplot(3,3,1)
+semilogx(w,mag2db(squeeze(abs(h(1,1,:)))))
+hold on
+semilogx(w,mag2db(squeeze(abs(h2(1,1,:)))))
+subplot(3,3,2)
+semilogx(w,mag2db(squeeze(abs(h(1,2,:)))))
+hold on
+semilogx(w,mag2db(squeeze(abs(h2(1,2,:)))))
+subplot(3,3,3)
+semilogx(w,mag2db(squeeze(abs(h(1,3,:)))))
+hold on
+semilogx(w,mag2db(squeeze(abs(h2(1,3,:)))))
+subplot(3,3,4)
+semilogx(w,mag2db(squeeze(abs(h(2,1,:)))))
+hold on
+semilogx(w,mag2db(squeeze(abs(h2(2,1,:)))))
+subplot(3,3,5)
+semilogx(w,mag2db(squeeze(abs(h(2,2,:)))))
+hold on
+semilogx(w,mag2db(squeeze(abs(h2(2,2,:)))))
+subplot(3,3,6)
+semilogx(w,mag2db(squeeze(abs(h(2,3,:)))))
+hold on
+semilogx(w,mag2db(squeeze(abs(h2(2,3,:)))))
+subplot(3,3,7)
+semilogx(w,mag2db(squeeze(abs(h(3,1,:)))))
+hold on
+semilogx(w,mag2db(squeeze(abs(h2(3,1,:)))))
+subplot(3,3,8)
+semilogx(w,mag2db(squeeze(abs(h(3,2,:)))))
+hold on
+semilogx(w,mag2db(squeeze(abs(h2(3,2,:)))))
+subplot(3,3,9)
+semilogx(w,mag2db(squeeze(abs(h(3,3,:)))))
+hold on
+semilogx(w,mag2db(squeeze(abs(h2(3,3,:)))))
 
