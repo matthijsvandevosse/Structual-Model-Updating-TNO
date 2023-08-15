@@ -8,7 +8,7 @@ pause(0.5)
 
 %% Load Sensitivity matrix
 
-modeIndex = [1 2 3 4 5]; % Indexes of these measured modes
+modeIndex = [1 2 3 4]; % Indexes of these measured modes
 n_modes = length(modeIndex); % Number of measured modes
 %% Assemble structure matrices
 
@@ -51,7 +51,7 @@ optimzOpts.maxFunEvals = 12e5;
 load("eigenFrequencies.mat")
 freqExp = eigenFrequencies(modeIndex);
 freqExp(4) = eigenFrequencies(5);
-freqExp(5) = 170;
+% freqExp(5) = 170;
 lambdaExp = (2*pi*(freqExp)).^2;
 load("Modeshapes_V1.mat")
 L(:,4) = L(:,5);
@@ -85,11 +85,13 @@ unmeasDOFs = setdiff(1 : N, measDOFs);
 num_measDOFs = length(measDOFs);
 num_unmeasDOFs = length(unmeasDOFs);
 % expModes.lambdaWeights = [1 1 1];
-expModes.lambdaWeights = 2*[10 10 10 10 1];
+expModes.lambdaWeights = 2*[10 10 10 10 2];
+expModes.lambdaWeights = 2*[10 10 10 10];
 % expModes.psiWeights = [1 1 1];
 expModes.psiWeights = ones(n_modes,1);
 
-expModes.psiWeights = [1000 200 400 400 0.1];
+expModes.psiWeights = [1000 200 400 200 0.1];
+expModes.psiWeights = [1000 200 400 200];
 expModes.resWeights = ones(n_modes,1);
 
 
@@ -124,14 +126,17 @@ for n = 1:n_alpha
 Ksolved = Ksolved + x(n)*full(structModel.K_j{n});
 end
 
+structModel.K = Ksolved;
+
 [Psi_solvedxy, lambdasolved] = eig(full(structModel.M0)\Ksolved);
  
 [Psi_o, lambda_o] = eig(full(structModel.M0)\structModel.K0);
-
+%%
 [lambdasolved,dummyInd] = sort(diag(lambdasolved), 'ascend');
 [lambda_o,dummyInd_o] = sort(diag(lambda_o), 'ascend');
 % lambdasolved = lambdasolved(modeIndex);
-Psi_solved = Psi_solvedxy(N/2+1:end, dummyInd(1:5));
+Psi_solvedxy = Psi_solvedxy(:,dummyInd);
+Psi_solved = Psi_solvedxy(N/2+1:end,:);
 Psi_o = Psi_o(N/2+1:end, dummyInd_o(1:5));
 %%
 naturalfrequency = sqrt(lambdasolved(1:5))/(2*pi)
@@ -231,27 +236,25 @@ C(3,measDOFs(3)) = 30000;
 C(4,nonmeasDOFs(1)) = 30000;
 C(5,measDOFs(4)) = 30000;
 A = [zeros(N,N) eye(N); -inv(structModel.M0)*Ksolved zeros(N,N)];
+%damped
+
+%%
+D = 1e-6.*eye(N,N);
+%%
+A = [zeros(N,N) eye(N); -inv(structModel.M0)*Ksolved -inv(structModel.M0)*D];
+
 A_o = [zeros(N,N) eye(N); -inv(structModel.M0)*structModel.K0 zeros(N,N)];
+% A_o = [zeros(N,N) eye(N); -inv(structModel.M0)*Ksolved zeros(N,N)];
 B = [zeros(N,3); Minv(:,actDOFs)];
 load("Modal_Systeem_V1.mat")
 sys1 = ss(A,B,C,0);
 syso = ss(A_o,B,C,0);
+
+%%
 w = logspace(0,4,400);
 h = freqresp(sys1, w);
 h_o = freqresp(syso, w);
 hm = freqresp(Gmod7, w);
-%%
-h_frf = frd(h, w);
-ho_frf = frd(h_o, w);
-hm_frf = frd(hm, w);
-
-opts.PhaseWrapping = 'on';
-[h_mag,h_pha   ,wfrf]   = bode(h_frf,w);
-[ho_mag,ho_pha   ,wfrf]   = bode(ho_frf);
-[hm_mag,hm_pha   ,wfrf]   = bode(hm_frf);
-
-h_pha(h_pha>1) = h_pha(h_pha>1) - 360;
-
 %%
 load('Modal_Systeem_V1.mat')
 load('BeamModal_O12345I123.mat')
@@ -261,7 +264,103 @@ data{1} = ModalFitData;
 G_ref = data{1}.G_ref;
 
 [Gfrf_mag,Gfrf_pha   ,wfrf]   = bode(G_ref);
-ffrf = wfrf/2/pi;
+ffrf = wfrf;
+
+%%
+data = data{1,1};
+%%
+% DampingOptimization
+
+LeastSquaredOpt
+%%
+A_new = [zeros(N) eye(N); -inv(structModel.M0)*Ksolved -inv(structModel.M0)*(x)*eye(N)];
+
+sys3 = ss(A_new,B,C,0);
+
+h2 = freqresp(sys3, w);
+
+% A_new = [zeros(N,N) eye(N); -inv(structModel.M0)*Ksolved -inv(structModel.M0)*D_new_param(1)*eye(N,N)];
+% 
+% sys4 = ss(A_new,B,C,0);
+% 
+% h3 = freqresp(sys4, w);
+%%
+A_new = [zeros(N) eye(N); -inv(structModel.M0)*Ksolved -inv(structModel.M0)*5.6e-2*eye(N)];
+%
+sys5 = ss(A_new,B,C,0); 
+% 
+h4 = freqresp(sys5, w);
+
+%%
+h_frf = frd(h, w);
+h2_frf = frd(h2, w);
+% h3_frf = frd(h3, w);
+h4_frf = frd(h4, w);
+ho_frf = frd(h_o, w);
+hm_frf = frd(hm, w);
+
+opts.PhaseWrapping = 'on';
+[h_mag,h_pha   ,wfrf]   = bode(h_frf,w);
+[h2_mag,h2_pha   ,wfrf]   = bode(h2_frf,w);
+% [h3_mag,h3_pha   ,wfrf]   = bode(h3_frf,w);
+[h4_mag,h4_pha   ,wfrf]   = bode(h4_frf,w);
+[ho_mag,ho_pha   ,wfrf]   = bode(ho_frf);
+[hm_mag,hm_pha   ,wfrf]   = bode(hm_frf);
+
+h_pha(h_pha>1) = h_pha(h_pha>1) - 360;
+
+%%
+f = figure(24);
+tiledlayout(4,3,'TileSpacing','Compact','Padding','Compact');
+for i = 1:4
+    for j = 1:1:3
+        nexttile
+        hold on
+
+        set(gca, 'XScale', 'log')
+        set(gca,'ytick',[-360,-180,0])
+
+
+            plot(ffrf,squeeze((Gfrf_pha( Out(i),Inp(j),:)))+40/100*ffrf/2/pi, 'b',   'LineWidth', 1.2)
+            plot(w,(squeeze(h_pha(i,j,:))), 'LineWidth',1.2)
+            plot(w,(squeeze(h2_pha(i,j,:))), 'LineWidth',1.2)
+            % plot(w,(squeeze(h3_pha(i,j,:))), 'LineWidth',1.2)
+            plot(w,(squeeze(h4_pha(i,j,:))),'k', 'LineWidth',1.2)
+            % plot(w/(2*pi),(squeeze(-rad2deg(angle(h(i,j,:))))), 'LineWidth',1.2)
+            % plot(w/(2*pi),(squeeze(hm_pha(i,j,:))), ':k', 'LineWidth',1.2)
+            xline(G_ref.Frequency(10)*2*pi)
+            xline(G_ref.Frequency(30)*2*pi)
+            
+            legend(["FRF", "No damping", "Updated at 20rad/s", "(MEAN) Updated at 20-28rad/s"], Location="southwest")
+        if i==3 && j==2;
+            xlabel('$f$ [Hz]')
+        elseif i~=3
+%             set(gca,'xtick',[])
+            xticklabels({})
+        end
+        if j==1 && i==2
+            ylabel('Phase [$^\circ$]')
+        elseif j~=1
+%             set(ax2,'xticklab',get(ax1,'xticklab'))
+            yticklabels({})
+        end
+        xlim([1,2000])
+        ylim([-400,0])
+        set(gca, 'Fontsize', 13)
+        set(gca, 'LineWidth', 1.25)
+        box on
+        % fig = get(groot,'CurrentFigure');
+        % set(fig, 'PaperUnits', 'centimeters');
+        % set(fig, 'Units', 'centimeters');
+        % x_width=8.85;          %x_width of the figure, set at template column width
+        % y_width=0.75*x_width;   %y_width of the figure, free to choose
+        % set(fig, 'PaperPosition', [0 0 x_width y_width]); 
+        % set(fig, 'PaperSize', [x_width y_width]); 
+        % set(fig, 'InnerPosition', [0 0 x_width y_width]);
+        % set(gca,'FontSize',9)
+
+    end
+end
 %%
 f = figure(23);
 tiledlayout(5,3,'TileSpacing','Compact','Padding','Compact');
@@ -277,8 +376,16 @@ for i = 1:5
 
 
             plot(ffrf,squeeze(mag2db(Gfrf_mag( Out(i),Inp(j),:))), 'b',   'LineWidth', 1.2)
-            plot(w/(2*pi),mag2db(squeeze(h_mag(i,j,:))), 'LineWidth',1.2)
-            % plot(w/(2*pi),mag2db(squeeze(hm_mag(i,j,:))), ':k', 'LineWidth',1.2)
+            plot(w,mag2db(squeeze(h_mag(i,j,:))), 'LineWidth',1.2)
+            plot(w,mag2db(squeeze(h2_mag(i,j,:))), 'LineWidth',1.2)
+            % plot(w,mag2db(squeeze(h3_mag(i,j,:))), 'LineWidth',1.2)
+            plot(w,mag2db(squeeze(h4_mag(i,j,:))), 'LineWidth',1.2)
+            xline(G_ref.Frequency(10)*2*pi) 
+            xline(G_ref.Frequency(30)*2*pi)
+            % xline(G_ref.Frequency(23)*2*pi)
+            % plot(w,mag2db(squeeze(hm_mag(i,j,:))), ':k', 'LineWidth',1.2)
+
+                        legend(["FRF", "No damping", "Updated at 20rad/s", "(MEAN) Updated at 20-28rad/s"],Location="southwest")
         if i==3 && j==2;
             xlabel('$f$ [Hz]')
         elseif i~=3
@@ -287,69 +394,14 @@ for i = 1:5
         if j==1 && i==2
             ylabel('Mag [dB]')
         elseif j~=1
-
             yticklabels({})
         end
-        xlim([1,200])
+        xlim([1,2000])
         ylim([-75,80])
         set(gca, 'Fontsize', 13)
         set(gca, 'LineWidth', 1.25)
         box on
-        fig = get(groot,'CurrentFigure');
-        set(fig, 'PaperUnits', 'centimeters');
-        set(fig, 'Units', 'centimeters');
-        x_width=8.85;          %x_width of the figure, set at template column width
-        y_width=0.75*x_width;   %y_width of the figure, free to choose
-        set(fig, 'PaperPosition', [0 0 x_width y_width]); 
-        set(fig, 'PaperSize', [x_width y_width]); 
-        set(fig, 'InnerPosition', [0 0 x_width y_width]);
-        set(gca,'FontSize',9)
 
     end
 end
 
-f = figure(24);
-tiledlayout(4,3,'TileSpacing','Compact','Padding','Compact');
-for i = 1:4
-    for j = 1:1:3
-        nexttile
-        hold on
-
-        set(gca, 'XScale', 'log')
-        set(gca,'ytick',[-360,-180,0])
-
-
-            plot(ffrf,squeeze((Gfrf_pha( Out(i),Inp(j),:)))+40/100*ffrf, 'b',   'LineWidth', 1.2)
-            plot(w/(2*pi),(squeeze(h_pha(i,j,:))), 'LineWidth',1.2)
-            % plot(w/(2*pi),(squeeze(-rad2deg(angle(h(i,j,:))))), 'LineWidth',1.2)
-            % plot(w/(2*pi),(squeeze(hm_pha(i,j,:))), ':k', 'LineWidth',1.2)
-
-        if i==3 && j==2;
-            xlabel('$f$ [Hz]')
-        elseif i~=3
-%             set(gca,'xtick',[])
-            xticklabels({})
-        end
-        if j==1 && i==2
-            ylabel('Phase [$^\circ$]')
-        elseif j~=1
-%             set(ax2,'xticklab',get(ax1,'xticklab'))
-            yticklabels({})
-        end
-        xlim([1,500])
-        ylim([-400,0])
-        set(gca, 'Fontsize', 13)
-        set(gca, 'LineWidth', 1.25)
-        box on
-        fig = get(groot,'CurrentFigure');
-        set(fig, 'PaperUnits', 'centimeters');
-        set(fig, 'Units', 'centimeters');
-        x_width=8.85;          %x_width of the figure, set at template column width
-        y_width=0.75*x_width;   %y_width of the figure, free to choose
-        set(fig, 'PaperPosition', [0 0 x_width y_width]); 
-        set(fig, 'PaperSize', [x_width y_width]); 
-        set(fig, 'InnerPosition', [0 0 x_width y_width]);
-        set(gca,'FontSize',9)
-
-    end
-end
