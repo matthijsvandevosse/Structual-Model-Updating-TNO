@@ -10,7 +10,6 @@ function [b, S] = OptmzObjJac_matthijs(x, data, structModel, freq, sensorloc, op
 [S,b] =  ModelUpdatingObjective_matthijs(x, data, structModel,freq, sensorloc);
 b = sparse(b);
 S = sparse(S);
-x
 % fmincon use scalar as objective function output
 if(strcmp(optToolBox,'fmincon'))
     if nargout > 1

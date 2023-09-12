@@ -24,10 +24,10 @@ l = 500/1000;
 h = 22/1000;
 t = 2/1000;
 
-
+% sensor_loc = [50 150 250 350 450]/1000;
 sensor_loc = [55 155 255 355 455]/1000;
+sensor_loc = [45 145 245 345 445]/1000;
 
-% sensor_loc = [125 250 375]/1000;
 % For a rectangle, the first row contains 3, and the second row contains 4. 
 % The next four rows contain the x-coordinates of the starting points of 
 % the edges, and the four rows after that contain the y-coordinates of 
@@ -90,10 +90,10 @@ structuralProperties(structuralmodelspring4,YoungsModulus=E, ...
                                      PoissonsRatio=nu);
 
 
-structuralProperties(structuralmodelE,YoungsModulus=.1.*E, ...
+structuralProperties(structuralmodelE,YoungsModulus=.5.*E, ...
                                      MassDensity=rho, ... 
                                      PoissonsRatio=nu);
-structuralProperties(structuralmodelE1,YoungsModulus=.25.*E, ...
+structuralProperties(structuralmodelE1,YoungsModulus=.4.*E, ...
                                      MassDensity=rho, ... 
                                      PoissonsRatio=nu, ...
                                      Face= 1);
@@ -101,7 +101,7 @@ structuralProperties(structuralmodelE1,YoungsModulus=E, ...
                                      MassDensity=rho, ... 
                                      PoissonsRatio=nu, ...
                                      Face= 2:8);
-structuralProperties(structuralmodelE2,YoungsModulus=.25.*E, ...
+structuralProperties(structuralmodelE2,YoungsModulus=.4.*E, ...
                                      MassDensity=rho, ... 
                                      PoissonsRatio=nu, ...
                                      Face= 2);
@@ -109,7 +109,7 @@ structuralProperties(structuralmodelE2,YoungsModulus=E, ...
                                      MassDensity=rho, ... 
                                      PoissonsRatio=nu, ...
                                      Face= [1 3:8]);
-structuralProperties(structuralmodelE3,YoungsModulus=.25.*E, ...
+structuralProperties(structuralmodelE3,YoungsModulus=.4.*E, ...
                                      MassDensity=rho, ... 
                                      PoissonsRatio=nu, ...
                                      Face= 3);
@@ -117,7 +117,7 @@ structuralProperties(structuralmodelE3,YoungsModulus=E, ...
                                      MassDensity=rho, ... 
                                      PoissonsRatio=nu, ...
                                      Face= [1:2 4:8]);
-structuralProperties(structuralmodelE4,YoungsModulus=.25.*E, ...
+structuralProperties(structuralmodelE4,YoungsModulus=.4.*E, ...
                                      MassDensity=rho, ... 
                                      PoissonsRatio=nu, ...
                                      Face= 4);
@@ -126,7 +126,7 @@ structuralProperties(structuralmodelE4,YoungsModulus=E, ...
                                      PoissonsRatio=nu, ...
                                      Face= [1:3 5:8]);
 
-structuralProperties(structuralmodelE5,YoungsModulus=.25.*E, ...
+structuralProperties(structuralmodelE5,YoungsModulus=.4.*E, ...
                                      MassDensity=rho, ... 
                                      PoissonsRatio=nu, ...
                                      Face= 5);
@@ -135,7 +135,7 @@ structuralProperties(structuralmodelE5,YoungsModulus=E, ...
                                      PoissonsRatio=nu, ...
                                      Face= [1:4 6:8]);
 
-structuralProperties(structuralmodelE6,YoungsModulus=.25.*E, ...
+structuralProperties(structuralmodelE6,YoungsModulus=.4.*E, ...
                                      MassDensity=rho, ... 
                                      PoissonsRatio=nu, ...
                                      Face= 6);
@@ -146,7 +146,7 @@ structuralProperties(structuralmodelE6,YoungsModulus=E, ...
 
 structuralProperties(structuralmodelnu,YoungsModulus=E, ...
                                      MassDensity=rho, ... 
-                                     PoissonsRatio=.5*nu);
+                                     PoissonsRatio=.9*nu);
 
 
 %% Boundaries
@@ -327,15 +327,14 @@ Knu = K;
 
 Kdiff{1}= sparse(Kinit - Kspring1);
 Kdiff{2} = sparse(Kinit - Kspring2);
-Kdiff{3} = sparse(Kinit - KE);
-Kdiff{4} = sparse(Kinit - Knu);
-Kdiff{5} = sparse(Kinit - KE1);
-Kdiff{6} = sparse(Kinit - KE2);
-Kdiff{7} = sparse(Kinit - KE3);
-Kdiff{8} = sparse(Kinit - KE4);
-Kdiff{9} = sparse(Kinit - KE5);
-Kdiff{10} = sparse(Kinit - KE6);
-
+Kdiff{3} = sparse(Kinit - KE1);
+Kdiff{4} = sparse(Kinit - KE2);
+Kdiff{5} = sparse(Kinit - KE3);
+Kdiff{6} = sparse(Kinit - KE4);
+Kdiff{7} = sparse(Kinit - KE5);
+Kdiff{8} = sparse(Kinit - KE6);
+Kdiff{9} = sparse(Kinit - Knu);
+Kdiff{10} = sparse(Kinit - KE);
 
 [Psi_solved, lambdasolved] = eig(Minit\Kinit);
 
@@ -343,49 +342,6 @@ Kdiff{10} = sparse(Kinit - KE6);
 lambdasolved = lambdasolved(1:6);
 Psi_solved = Psi_solved(:, dummyInd(1:6));
 
-% for i = 1:3
-%     [~,index] = max(abs(Psi_solved(:,i)));
-%     Psi_solved(:,i) = Psi_solved(:,i) / abs(Psi_solved(index,i));
-% end
-%%
-naturalfrequency = sqrt(lambdasolved)/(2*pi)
+%% Nodes
 
-%%
-% figure
-% pdeplot(modalresultsinit.Mesh,XYData=Psi_solved(size(Kinit,1)/2+1:end,2))
-% axis equal
-% figure
-% pdeplot(modalresultsinit.Mesh,XYData=Psi_solved(size(Kinit)/2+1:end,2))
-% axis equal
-% figure
-% pdeplot(modalresultsinit.Mesh,XYData=Psi_solved(size(Kinit)/2+1:end,3))
-% axis equal
-% figure
-% pdeplot(modalresultsinit.Mesh,XYData=Psi_solved(size(Kinit)/2+1:end,4))
-% axis equal
-% figure
-% pdeplot(modalresultsinit.Mesh,XYData=Psi_solved(size(Kinit)/2+1:end,5))
-% axis equal
-% figure
-% pdeplot(modalresultsinit.Mesh,XYData=Psi_solved(size(Kinit)/2+1:end,6))
-% axis equal
-
-% 
-% figure
-% pdeplot(modalresultsinit.Mesh,XYData=Psi_solved(1:size(Kinit)/2,1))
-% axis equal
-% figure
-% pdeplot(modalresultsinit.Mesh,XYData=Psi_solved(1:size(Kinit)/2,2))
-% axis equal
-% figure
-% pdeplot(modalresultsinit.Mesh,XYData=Psi_solved(1:size(Kinit)/2,3))
-% axis equal
-% figure
-% pdeplot(modalresultsinit.Mesh,XYData=Psi_solved(1:size(Kinit)/2,4))
-% axis equal
-% figure
-% pdeplot(modalresultsinit.Mesh,XYData=Psi_solved(1:size(Kinit)/2,5))
-% axis equal
-% figure
-% pdeplot(modalresultsinit.Mesh,XYData=Psi_solved(1:size(Kinit)/2,6))
-% axis equal
+TopNodes = structuralmodelinit.Mesh.Nodes(1,:) == 0.022;
