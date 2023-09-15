@@ -279,7 +279,7 @@ for zero_i = 1:length(expModes.lambdaExpZeros)
     %       -weight_Lambda_i * D_alpha(Lambda_i) / Lambda_i^EXP
     d_ri_eigFreqTerm = zeros( n_modes, n_alpha );
 
-    for i = 1 : n_modes
+    for i = 1:length(expModes.modeIndexZeros{zero_i})
         for j = 1 : n_alpha
             Kzero = structModel.K_j{j};
             Kzero(expModes.zerosDofs{zero_i}(1),:) = [];

@@ -17,7 +17,7 @@ n_alpha = length(alpha_act);
 
 
 %% Optimization structure parameter;
-optimzOpts.tolFun = 1e-5;
+optimzOpts.tolFun = 1e-3;
 optimzOpts.tolX = 1e-5;
 optimzOpts.toolBox  = 'lsqnonlin';
 optimzOpts.optAlgorithm = 'trust-region-reflective';
@@ -86,8 +86,8 @@ updatingOpts.modeMatch = 2;      % 1: Without forced matching;
                                  % 2: With forced matching;
 updatingOpts.simModesForExpMatch = modeIndex;
 if(updatingOpts.formID < 3)
-    updatingOpts.x_lb = -2*ones(n_alpha,1);
-    updatingOpts.x_ub =  2*ones(n_alpha,1);
+    updatingOpts.x_lb = -1.5*ones(n_alpha,1);
+    updatingOpts.x_ub =  1.5*ones(n_alpha,1);
     
 else
     updatingOpts.x_lb = [-2*ones(n_alpha,1); -2* ones(num_unmeasDOFs * n_modes,1)];

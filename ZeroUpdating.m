@@ -9,13 +9,13 @@ measDOFs = N/2+[6; 8; 10; 14];
 
 Mzeroinit = Minit;
 
-Mzeroinit(actDOFs(1),:) = [];
-Mzeroinit(:,measDOFs(1)) = [];
+Mzeroinit(actDOFs(3),:) = [];
+Mzeroinit(:,measDOFs(4)) = [];
 
-Kzero = Ksolved;
+Kzero = Kp;
 % Kzero = Kinit;
-Kzero(actDOFs(1),:) = [];
-Kzero(:,measDOFs(1)) = [];
+Kzero(actDOFs(3),:) = [];
+Kzero(:,measDOFs(4)) = [];
 
 structModel.M0 = sparse(Mzeroinit);
 structModel.K0 = sparse(Kzero);
@@ -108,7 +108,7 @@ structModel.K = Ksolvedzero;
 
 [lambda_init,dummyInd] = (sort(diag(lambda), 'ascend'));
 zeros_init = sqrt(lambda_init);
-zeros_init(1:2)
+zeros_init(1:3)
 %%
 
 

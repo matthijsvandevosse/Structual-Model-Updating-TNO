@@ -99,7 +99,8 @@ for i = 1 : n_modes
 end
 
     %% ZERO MATCHING
-    r_z = zeros(length(expModes.lambdaExpZeros),1);
+
+    r_z = [];
     for zero_i = 1:length(expModes.lambdaExpZeros)
         omegaSim = sqrt( simModes.lambdaZeros{zero_i});  % simulated angular frequency
         omegaExp = sqrt( expModes.lambdaExpZeros{zero_i} );% experimental angular frequency
@@ -118,11 +119,8 @@ end
             elseif (eigFreqOpt == 2)
                 eigFreqTerm = expModes.lambdaWeightsZeros{zero_i}(i) * (freqExp(i) - freqSim(i)) / freqExp(i);
             end
-
-            r_z(zero_i) = eigFreqTerm;
-
-
         end
+       r_z = [r_z; eigFreqTerm];
 
     end
     r = [r_p; r_z];

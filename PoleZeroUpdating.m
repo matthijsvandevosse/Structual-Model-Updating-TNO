@@ -8,11 +8,11 @@ structModel.M0 = sparse(Minit);
 structModel.K0 = sparse(Kinit);
 
 structModel.K_j = Kdiff;
-
+structModel.M_j = 0.05*structModel.M_0;
 
 %% Actual values for stiffness updating variables, each alpha represents 
 % relative change from nominal stiffness parameter.
-alpha_act = zeros(1,length(structModel.K_j));
+alpha_act = zeros(1,length(structModel.K_j)+length(structModel.M_j));
 n_alpha = length(alpha_act);
 
 
@@ -55,25 +55,42 @@ end
 
 psi_m = psiExpAll;
 %% Zeros
-lambdaExpZeros{1} = [131].^2;
-modeIndexZeros{1} = 2;
+clear modeIndexZeros
+clear lambdaExpZeros
+clear zerosDofs
+
+lambdaExpZeros{1} = [125].^2;
+modeIndexZeros{1} = [ 2];
 zerosDofs{1} = [measDOFs(3), measDOFs(3)];
 
-lambdaExpZeros{2} = [181].^2;
-modeIndexZeros{2} = 2;
+lambdaExpZeros{2} = [181 ].^2;
+modeIndexZeros{2} = [ 2];
 zerosDofs{2} = [measDOFs(1), measDOFs(1)];
 
 lambdaExpZeros{3} = [187].^2;
-modeIndexZeros{3} = 2;
+modeIndexZeros{3} = [ 2];
+
+% lambdaExpZeros{1} = [32.3 ].^2;
+% modeIndexZeros{1} = [1 ];
+% zerosDofs{1} = [measDOFs(3), measDOFs(3)];
+% 
+% lambdaExpZeros{2} = [ ].^2;
+% modeIndexZeros{2} = [1 ];
+% zerosDofs{2} = [measDOFs(1), measDOFs(1)];
+% 
+% lambdaExpZeros{3} = [21.2 ].^2;
+% modeIndexZeros{3} = [1 ];
+
+
 zerosDofs{3} = [measDOFs(4), measDOFs(4)];
 %%
 expModes.lambdaExp = lambdaExp;
 expModes.lambdaExpZeros = lambdaExpZeros;
 expModes.zerosDofs = zerosDofs;
 expModes.modeIndexZeros = modeIndexZeros;
-expModes.lambdaWeightsZeros{1} = 20;
-expModes.lambdaWeightsZeros{2} = 20;
-expModes.lambdaWeightsZeros{3} = 20;
+expModes.lambdaWeightsZeros{1} = [5];
+expModes.lambdaWeightsZeros{2} = [25];
+expModes.lambdaWeightsZeros{3} = [5];
 expModes.psiExp = psi_m;
 expModes.measDOFs = measDOFs;
 unmeasDOFs = setdiff(1 : N, measDOFs);
@@ -81,10 +98,11 @@ num_measDOFs = length(measDOFs);
 num_unmeasDOFs = length(unmeasDOFs);
 
 expModes.lambdaWeights = [20 20 30 15];
-
+% expModes.lambdaWeights = zeros(1,4);
 expModes.psiWeights = ones(n_modes,1);
 
 expModes.psiWeights = [500 200 400 200];
+% expModes.psiWeights = zeros(1,4);
 
 
 expModes.resWeights = ones(n_modes,1);
@@ -100,8 +118,8 @@ updatingOpts.modeMatch = 2;      % 1: Without forced matching;
                                  % 2: With forced matching;
 updatingOpts.simModesForExpMatch = modeIndex;
 if(updatingOpts.formID < 3)
-    updatingOpts.x_lb = -1.25*ones(n_alpha,1);
-    updatingOpts.x_ub =  1.25*ones(n_alpha,1);
+    updatingOpts.x_lb = -1.5*ones(n_alpha,1);
+    updatingOpts.x_ub =  1.5*ones(n_alpha,1);
 else
     updatingOpts.x_lb = [-2*ones(n_alpha,1); -2* ones(num_unmeasDOFs * n_modes,1)];
     updatingOpts.x_ub =  [5*ones(n_alpha,1); 5 * ones(num_unmeasDOFs * n_modes,1)];

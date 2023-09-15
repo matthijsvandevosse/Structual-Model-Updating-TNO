@@ -26,6 +26,7 @@ nonmeasDOFs =  N/2+[12];
 PoleUpdating
 %%
 PoleZeroUpdating
+
 %%
 
 [lambdasolved,dummyInd] = sort(diag(lambdasolved), 'ascend');
@@ -132,6 +133,7 @@ A = [zeros(N,N) eye(N); -inv(structModel.M0)*structModel.K zeros(N,N)];
 
 %%
 structModel.D0 = 5.9e-2.*eye(N,N);
+% structModel.D0 = 0e-2.*eye(N,N);
 
 %%
 A = [zeros(N,N) eye(N); -inv(structModel.M0)*structModel.K -inv(structModel.M0)*structModel.D0];
@@ -205,9 +207,9 @@ hm_frf = frd(hm, w);
 
 %%
 f = figure(24);
-tiledlayout(2,2,'TileSpacing','Compact','Padding','Compact');
-for i = 1:2:3
-    for j = 1:1:2
+tiledlayout(5,3,'TileSpacing','Compact','Padding','Compact');
+for i = 1:1:5
+    for j = 1:1:3
         nexttile
         hold on
 
@@ -215,32 +217,33 @@ for i = 1:2:3
         set(gca,'ytick',[-360,-180,0])
 
 
-        plot(ffrf,squeeze((Gfrf_pha( Out(i),Inp(j),:)))+40/100*ffrf/2/pi, 'b',   'LineWidth', 2)
-        % plot(w,(squeeze(ho_pha(i,j,:))), 'k:', 'LineWidth',2)
+        plot(ffrf,squeeze((Gfrf_pha( Out(i),Inp(j),:)))+40/100*ffrf/2/pi, 'b',   'LineWidth', 1.5)
+        plot(w,(squeeze(ho_pha(i,j,:))), 'k--', 'LineWidth',1.5)
         % plot(w,(squeeze(hm_pha(i,j,:))), 'LineWidth',1.2)
-        % plot(w,(squeeze(h_pha(i,j,:))), 'r', 'LineWidth',2)
-        plot(w,(squeeze(h2_pha(i,j,:))), 'r', 'LineWidth',2)
-        plot(w,(squeeze(hp_pha(i,j,:))), 'g', 'LineWidth',2)
+        plot(w,(squeeze(h_pha(i,j,:))), 'g', 'LineWidth',1.5)
+        % plot(w,(squeeze(h2_pha(i,j,:))), 'r', 'LineWidth',2)
+        plot(w,(squeeze(hp_pha(i,j,:))), 'r', 'LineWidth',1.5)
 
 
-
-        legend(["FRF", "Init", "Updated", "Updated Zeros",],Location="southwest")
-        % xline(data_opt.G_ref.Frequency(freq)*2*pi)
+        if i ==1 & j == 1
+        lgd = legend(["FRF", "Init", "Updated",],Location="southwest");
+        end
+        lgd.FontSize = 18;  % xline(data_opt.G_ref.Frequency(freq)*2*pi)
 
         if i==3 && j==2;
-            xlabel('$f$ [Hz]')
+            xlabel('f [Hz]')
         elseif i~=3
             %             set(gca,'xtick',[])
             xticklabels({})
         end
-        if j==1 && i==2
-            ylabel('Phase [$^\circ$]')
+        if j==1 && i==3
+            ylabel('Phase [^\circ]')
         elseif j~=1
             %             set(ax2,'xticklab',get(ax1,'xticklab'))
             yticklabels({})
         end
-        xlim([1,400])
-        ylim([-400,0])
+              xlim([1,2000])
+        ylim([-380,0])
         set(gca, 'Fontsize', 13)
         set(gca, 'LineWidth', 1.25)
         box on
@@ -271,26 +274,28 @@ for i = 1:1:5
         set(gca,'ytick',[-50,0,50])
 
 
-        plot(ffrf,squeeze(mag2db(Gfrf_mag( Out(i),Inp(j),:))), 'b',   'LineWidth', 2)
-        % plot(w,mag2db(squeeze(ho_mag(i,j,:))), 'k:', 'LineWidth',2)
+        plot(ffrf,squeeze(mag2db(Gfrf_mag( Out(i),Inp(j),:))), 'b',   'LineWidth', 1.5)
+        plot(w,mag2db(squeeze(ho_mag(i,j,:))), 'k--', 'LineWidth',1.5)
 
-        % plot(w,mag2db(squeeze(h_mag(i,j,:))), 'r', 'LineWidth',2)
-        % plot(w,mag2db(squeeze(hp_mag(i,j,:))), 'r','LineWidth',2)
-        plot(w,mag2db(squeeze(h2_mag(i,j,:))), 'LineWidth',2 )
+        plot(w,mag2db(squeeze(h_mag(i,j,:))), 'g', 'LineWidth',1.5)
+        plot(w,mag2db(squeeze(hp_mag(i,j,:))), 'r','LineWidth',1.5)
+        % plot(w,mag2db(squeeze(h2_mag(i,j,:))), 'LineWidth',2 )
 
 
 
         % xline(data_opt.G_ref.Frequency(freq)*2*pi)
 
-
-        legend(["FRF", "Init", "Updated", "Updated Zeros",],Location="southwest")
-        legend(["FRF", "Updated Zeros and Poles",],Location="southwest")
+        if i ==1 & j == 1
+        lgd = legend(["FRF", "Init", "Updated",],Location="southwest");
+        end
+        lgd.FontSize = 18;
+        % legend(["FRF", "Updated Zeros and Poles",],Location="southwest")
         if i==3 && j==2;
-            xlabel('$f$ [Hz]')
+            xlabel('f [Hz]')
         elseif i~=3
             xticklabels({})
         end
-        if j==1 && i==2
+        if j==1 && i==3
             ylabel('Mag [dB]')
         elseif j~=1
             yticklabels({})
