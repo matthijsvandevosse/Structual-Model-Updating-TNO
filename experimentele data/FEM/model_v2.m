@@ -2,9 +2,9 @@ clear all
 close all
 
 
-E = 100e9;
+E = 190e9;
 nu = 0.29;
-rho = 7e3;
+rho = 7.8e3;
 
 
 structuralmodelinit = createpde(structural = "modal-planestrain");

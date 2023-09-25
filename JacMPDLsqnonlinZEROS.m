@@ -63,6 +63,7 @@ function [jac] = JacMPDLsqnonlin(structModel, expModes, simModes, ...
 %   jac: the Jacobian of the objective function (matrix)
 
 n_alpha = length( structModel.K_j ) ;
+n_beta = length(structModel.M_j);
 N = size( structModel.K0, 1 );
 
 omegaSim = sqrt( simModes.lambda );
@@ -73,7 +74,7 @@ n_modes = expModes.n_modes;
 
 for i = 1 : n_modes
     if (normOpt == 1)
-        simModes.psi_m(:,i) = simModes.psi_m(:,i) / simModes.psi_m(expModes.q(i), i);
+        simModes.psi_m(:,i) = simModes.psi_m(:,i) / simModes.psi_m(expModes.qm(i), i);
         simModes.psi(:,i) = simModes.psi(:,i) / simModes.psi(expModes.q(i), i);
 
     elseif (normOpt == 2)
@@ -87,11 +88,11 @@ end
 
 modalMass = zeros( n_modes, 1 );
 for i = 1 : n_modes
-    modalMass(i) = simModes.psi(:, i)' * structModel.M0 * simModes.psi(:, i);
+    modalMass(i) = simModes.psi(:, i)' * structModel.M * simModes.psi(:, i);
 end
 
 % dLambda will store values for d_lambda_i / d_alpha_j
-dLambda = zeros( n_modes, n_alpha );
+dLambda = zeros( n_modes, n_alpha+n_beta );
 
 % d_ri_eigFreqTerm will store the first part of d_r_i / d_alpha, i.e.
 % the part involving the derivative of eigenvalue | angular
@@ -112,18 +113,29 @@ for i = 1 : n_modes
                 / (omegaExp(i) * 2 * omegaSim(i));
         end
     end
+    for j = 1 : n_beta
+        dLambda(i,j+n_alpha) = simModes.psi(:,i)' * -simModes.lambda(i) * structModel.M_j{j} *...
+            simModes.psi(:,i) / modalMass(i);
+        if eigFreqOpt == 0
+            d_ri_eigFreqTerm(i,j+n_alpha) = - dLambda(i,j+n_alpha) * expModes.lambdaWeights(i) ...
+                / expModes.lambdaExp(i) ;
+        elseif eigFreqOpt == 1 || eigFreqOpt == 2
+            d_ri_eigFreqTerm(i,j+n_alpha) = - dLambda(i,j+n_alpha) * expModes.lambdaWeights(i) ...
+                / (omegaExp(i) * 2 * omegaSim(i));
+        end
+    end
 end
 
 % The 3rd dimension corresponds to i in Psi_i^m -- the mode index
-dPsi_m = zeros(n_meas, n_alpha, n_modes);
+dPsi_m = zeros(n_meas, n_alpha + n_beta, n_modes);
 for i = 1 : n_modes
     dPsi_dAlpha_j = zeros(N, 1);
-    B = sparse( structModel.K - simModes.lambda(i) * structModel.M0 );
+    B = sparse( structModel.K - simModes.lambda(i) * structModel.M );
 
     if (normOpt == 1)
         % The maximum entry of Psi_m is normalized to 1
         P_i = setdiff(1 : N, expModes.q(i));
-        Q_i = P_i(1 : n_meas - 1);
+
         % Cross out q_i-th row in B and b, and q_i-th column in B
         B = B(P_i, P_i);
         % Accommodate different variable names in different MATLAB versions.
@@ -138,7 +150,7 @@ for i = 1 : n_modes
         end
 
         for j = 1 : n_alpha
-            b = dLambda(i,j) * structModel.M0 * simModes.psi(:, i) -...
+            b = dLambda(i,j) * structModel.M * simModes.psi(:, i) -...
                 structModel.K_j{j} * simModes.psi(:, i);
             b = sparse(b(P_i));
             if (MAT_version >= 2017)
@@ -152,57 +164,75 @@ for i = 1 : n_modes
                 end
             end
             % The q_i-th entry of dPsi_m remains as 0 from initialization
-            dPsi_m(Q_i, j, i) = dPsi_dAlpha_j(Q_i);
+            dPsi_m(:, j, i) = dPsi_dAlpha_j(expModes.measDOFs);
         end
-
-    else
-        % Length of Psi is normalized to 1.
-        [~, index] = max(abs( simModes.psi(:,i) ));
-        B(:, index) = zeros(N, 1);
-        B(index, :) = zeros(1, N);
-        B(index, index) = 1;
-        % Accommodate different variable names in different MATLAB versions.
-        vers_temp = version( '-release' );
-        MAT_version = str2num( vers_temp(1 : 4) );
-        if (MAT_version >= 2017)
-            % factorization
-            dcompB = decomposition(B);
-        else
-            % LU factorization
-            [L,U, pp, qq, dgsB] = lu(B);
-        end
-
-        for j = 1 : n_alpha
-            b = dLambda(i,j) * structModel.M0 * simModes.psi(:, i) -...
-                structModel.K_j{j} * simModes.psi(:, i);
-            b(index) = 0;
-            b = sparse(b);
+        for j = 1 : n_beta
+            b = dLambda(i,j+n_alpha) * structModel.M * simModes.psi(:, i) +...
+                simModes.lambda(i) * structModel.M_j{j} * simModes.psi(:, i);
+            b = sparse(b(P_i));
             if (MAT_version >= 2017)
-                v = dcompB \ b;
+                dPsi_dAlpha_j(P_i) = dcompB \ b;
             else
                 if ~isempty(dgsB)
                     % use LU reordering
-                    v = qq*(U \ (L \ (pp*(dgsB\b))));
+                    dPsi_dAlpha_j(P_i) = qq*(U \ (L \ (pp*(dgsB\b))));
                 else
-                    v = U \ (L \ b(pp));
+                    dPsi_dAlpha_j(P_i) = U \ (L \ b(pp));
                 end
             end
-            % R. B. Nelson, "Simplified calculation of eigenvector
-            % derivatives," AIAA journal, vol. 14, pp. 1201-1205, 1976.
-            c = -simModes.psi(:,i)' *  v ;
-            dPsi_dAlpha_j = v + c * simModes.psi(:,i);
-            dPsi_m(:, j, i) = dPsi_dAlpha_j(1 : n_meas);
+            % The q_i-th entry of dPsi_m remains as 0 from initialization
+            dPsi_m(:, j+n_alpha, i) = dPsi_dAlpha_j(expModes.measDOFs);
         end
+
+    else
+        error('This vector norm is not implemented yet for mass optimization')
+        % Length of Psi is normalized to 1.
+        % % % [~, index] = max(abs( simModes.psi(:,i) ));
+        % % % B(:, index) = zeros(N, 1);
+        % % % B(index, :) = zeros(1, N);
+        % % % B(index, index) = 1;
+        % % % % Accommodate different variable names in different MATLAB versions.
+        % % % vers_temp = version( '-release' );
+        % % % MAT_version = str2num( vers_temp(1 : 4) );
+        % % % if (MAT_version >= 2017)
+        % % %     % factorization
+        % % %     dcompB = decomposition(B);
+        % % % else
+        % % %     % LU factorization
+        % % %     [L,U, pp, qq, dgsB] = lu(B);
+        % % % end
+        % % %
+        % % % for j = 1 : n_alpha
+        % % %     b = dLambda(i,j) * structModel.M * simModes.psi(:, i) -...
+        % % %         structModel.K_j{j} * simModes.psi(:, i);
+        % % %     b(index) = 0;
+        % % %     b = sparse(b);
+        % % %     if (MAT_version >= 2017)
+        % % %         v = dcompB \ b;
+        % % %     else
+        % % %         if ~isempty(dgsB)
+        % % %             % use LU reordering
+        % % %             v = qq*(U \ (L \ (pp*(dgsB\b))));
+        % % %         else
+        % % %             v = U \ (L \ b(pp));
+        % % %         end
+        % % %     end
+        % % %     % R. B. Nelson, "Simplified calculation of eigenvector
+        % % %     % derivatives," AIAA journal, vol. 14, pp. 1201-1205, 1976.
+        % % %     c = -simModes.psi(:,i)' *  v ;
+        % % %     dPsi_dAlpha_j = v + c * simModes.psi(:,i);
+        % % %     dPsi_m(:, j, i) = dPsi_dAlpha_j(1 : n_meas);
+        % % % end
     end
 end
 
 if (objOpt == 1)
-    jac_p = zeros(2 * n_modes, n_alpha);
+    jac_p = zeros(2 * n_modes, n_alpha + n_beta);
 else
     if(normOpt == 1)
-        jac_p = zeros(n_meas * n_modes, n_alpha);
+        jac_p = zeros(n_meas * n_modes, n_alpha + n_beta);
     else
-        jac_p = zeros((n_meas + 1) * n_modes, n_alpha);
+        jac_p = zeros((n_meas + 1) * n_modes, n_alpha + n_beta);
     end
 end
 
@@ -241,7 +271,7 @@ end
 
 %% ZERO matching
 jac_z = [];
-for zero_i = 1:length(expModes.lambdaExpZeros)
+for zero_i = 1:length(expModes.zerosDofs)
 
 
     omegaSim = sqrt( simModes.lambdaZeros{zero_i} );
@@ -263,23 +293,24 @@ for zero_i = 1:length(expModes.lambdaExpZeros)
 
     modalMass_z = zeros( n_modes, 1 );
     for i = 1 : n_modes
-        Mzero =  structModel.M0;
+        Mzero =  structModel.M;
         Mzero(expModes.zerosDofs{zero_i}(1),:) = [];
         Mzero(:,expModes.zerosDofs{zero_i}(2)) = [];
         modalMass_z(i) = simModes.psi_z{zero_i}(:, i)' * Mzero * simModes.psi_z{zero_i}(:, i);
     end
 
     % dLambda will store values for d_lambda_i / d_alpha_j
-    dLambda = zeros( n_modes, n_alpha );
+    dLambda = zeros( n_modes, n_alpha + n_beta );
 
     % d_ri_eigFreqTerm will store the first part of d_r_i / d_alpha, i.e.
     % the part involving the derivative of eigenvalue | angular
     % frequency " ordinary frequency over alpha. For example, when eiegenvalue
     % is used, the formulation is:
     %       -weight_Lambda_i * D_alpha(Lambda_i) / Lambda_i^EXP
-    d_ri_eigFreqTerm = zeros( n_modes, n_alpha );
+    d_ri_eigFreqTerm = zeros( n_modes, n_alpha + n_beta );
 
     for i = 1:length(expModes.modeIndexZeros{zero_i})
+
         for j = 1 : n_alpha
             Kzero = structModel.K_j{j};
             Kzero(expModes.zerosDofs{zero_i}(1),:) = [];
@@ -294,9 +325,24 @@ for zero_i = 1:length(expModes.lambdaExpZeros)
                     / (omegaExp(i) * 2 * omegaSim(i));
             end
         end
+
+        for j = 1:n_beta
+            Mzero = structModel.M_j{j};
+            Mzero(expModes.zerosDofs{zero_i}(1),:) = [];
+            Mzero(:,expModes.zerosDofs{zero_i}(2)) = [];
+            dLambda(i,j+n_alpha) = - simModes.lambda(i) * simModes.psi_z{zero_i}(:,i)' * Mzero *...
+                simModes.psi_z{zero_i}(:,i) / modalMass_z(i);
+            if eigFreqOpt == 0
+                d_ri_eigFreqTerm(i,j+n_alpha) = - dLambda(i,j+n_alpha) * expModes.lambdaWeightsZeros{zero_i}(i) ...
+                    / expModes.lambdaExpZeros{zero_i}(i) ;
+            elseif eigFreqOpt == 1 || eigFreqOpt == 2
+                d_ri_eigFreqTerm(i,j+n_alpha) = - dLambda(i,j+n_alpha) * expModes.lambdaWeightsZeros{zero_i}(i) ...
+                    / (omegaExp(i) * 2 * omegaSim(i));
+            end
+        end
     end
 
-    jac = zeros(n_modes, n_alpha);
+    jac = zeros(n_modes, n_alpha + n_beta);
 
 
     for i = 1 : n_modes

@@ -160,15 +160,15 @@ C_0(4,nonmeasDOFs(1)) =   30000;
 C_0(5,measDOFs(4)) =      30000;
 
 C = [zeros(5,2*N)];
-C(1,measDOFs(1)) =      30000+3000*x_1_M(1);
-C(2,measDOFs(2)) =      30000+3000*x_1_M(1);
-C(3,measDOFs(3)) =      30000+3000*x_1_M(1);
-C(4,nonmeasDOFs(1)) =   30000+3000*x_1_M(1);
-C(5,measDOFs(4)) =      30000+3000*x_1_M(1);
+C(1,measDOFs(1)) =      31000+1000*x_1_M(1);
+C(2,measDOFs(2)) =      31000+1000*x_1_M(1);
+C(3,measDOFs(3)) =      31000+1000*x_1_M(1);
+C(4,nonmeasDOFs(1)) =   31000+1000*x_1_M(1);
+C(5,measDOFs(4)) =      30000+1000*x_1_M(1);
 
 
 %%
-structModel.D0 = 7e-2.*eye(N,N);
+structModel.D0 = 5.9e-2.*eye(N,N);
 structModel.D = 5.9e-2.*eye(N,N);
 % structModel.D0 = 0e-2.*eye(N,N);
 

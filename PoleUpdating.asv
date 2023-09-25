@@ -70,12 +70,12 @@ unmeasDOFs = setdiff(1 : N, measDOFs);
 num_measDOFs = length(measDOFs);
 num_unmeasDOFs = length(unmeasDOFs);
 % expModes.lambdaWeights = [1 1 1];
-expModes.lambdaWeights = [20 20 20 10 1];
+expModes.lambdaWeights = [20 20 20 20 20];
 % expModes.lambdaWeights = 2*[10 10 10 10];
 % expModes.psiWeights = [1 1 1];
 expModes.psiWeights = ones(n_modes,1);
 
-expModes.psiWeights = [1000 200 400 200 25];
+expModes.psiWeights = [1000 200 400 200 50];
 % expModes.psiWeights = [1000 200 400 200];
 expModes.resWeights = ones(n_modes,1);
 

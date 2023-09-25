@@ -6,7 +6,7 @@ set(groot, 'defaultLegendInterpreter','latex');
 set(groot, 'defaulttextInterpreter','latex');
 
 %loading data
-Files = dir(fullfile(pwd, '*.mat'))
+Files = dir(fullfile(pwd, '*.mat'));
 
 Files = Files(1:end);
 data = cell(length(Files),1);

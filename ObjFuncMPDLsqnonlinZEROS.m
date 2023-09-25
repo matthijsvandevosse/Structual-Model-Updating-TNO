@@ -101,7 +101,7 @@ end
     %% ZERO MATCHING
 
     r_z = [];
-    for zero_i = 1:length(expModes.lambdaExpZeros)
+    for zero_i = 1:length(expModes.zerosDofs)
         omegaSim = sqrt( simModes.lambdaZeros{zero_i});  % simulated angular frequency
         omegaExp = sqrt( expModes.lambdaExpZeros{zero_i} );% experimental angular frequency
         freqSim = omegaSim / 2 / pi;
