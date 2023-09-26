@@ -10,7 +10,7 @@ pause(0.5)
 N = size(Kinit,1);
 
 % measurement points -- sensor_loc = [45 145 245 345 445]/1000;
-measDOFs = N/2+[6; 8; 10; 14];
+measDOFs = N/2+[6; 8; 10; 14]; 
 
 actDOFs = [21+N/2 141+N/2 233+N/2];
 
