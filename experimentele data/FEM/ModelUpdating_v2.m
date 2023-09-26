@@ -125,8 +125,6 @@ end
 
 pause(0.5)
 
-
-%%
 %%
 structModel.M0 = sparse(Minit);
 structModel.K0 = sparse(Kinit);
@@ -153,23 +151,23 @@ end
 Minv_o = inv(full(structModel.M0));
 Minv = inv(structModel.M);
 C_0 = [zeros(5,2*N)];
-C_0(1,measDOFs(1)) =      30000;
-C_0(2,measDOFs(2)) =      30000;
-C_0(3,measDOFs(3)) =      30000;
-C_0(4,nonmeasDOFs(1)) =   30000;
-C_0(5,measDOFs(4)) =      30000;
+C_0(1,measDOFs(1)) =      29000;
+C_0(2,measDOFs(2)) =      29000;
+C_0(3,measDOFs(3)) =      29000;
+C_0(4,nonmeasDOFs(1)) =   29000;
+C_0(5,measDOFs(4)) =      29000;
 
 C = [zeros(5,2*N)];
-C(1,measDOFs(1)) =      30000+3000*x_1_M(1);
-C(2,measDOFs(2)) =      30000+3000*x_1_M(1);
-C(3,measDOFs(3)) =      30000+3000*x_1_M(1);
-C(4,nonmeasDOFs(1)) =   30000+3000*x_1_M(1);
-C(5,measDOFs(4)) =      30000+3000*x_1_M(1);
+C(1,measDOFs(1)) =      29000+6000*x_1_M(1);
+C(2,measDOFs(2)) =      29000+6000*x_1_M(1);
+C(3,measDOFs(3)) =      29000+6000*x_1_M(1);
+C(4,nonmeasDOFs(1)) =   29000+6000*x_1_M(1);
+C(5,measDOFs(4)) =      29000+6000*x_1_M(1);
 
 
 %%
-structModel.D0 = 7e-2.*eye(N,N);
-structModel.D = 5.9e-2.*eye(N,N);
+structModel.D0 = 5.9e-2.*eye(N,N);
+structModel.D = 4.5e-2.*eye(N,N);
 % structModel.D0 = 0e-2.*eye(N,N);
 
 %%
@@ -209,12 +207,12 @@ data_opt = data{1,1};
 %%
 % LeastSquaredOpt
 % structModel.D = 5.8e-2*eye(N);
-structModel.D = 5e-3.*eye(N,N);
+% structModel.D = 5e-3.*eye(N,N);
 %%
-A_new = [zeros(N) eye(N); -inv(structModel.M)*structModel.K -inv(structModel.M)*(structModel.D)];
-
-sys3 = ss(A_new,B,C_0,0);
-
+% A_new = [zeros(N) eye(N); -inv(structModel.M)*structModel.K -inv(structModel.M)*(structModel.D)];
+% 
+% sys3 = ss(A_new,B,C,0);
+% 
 % h2 = freqresp(sys3, w);
 
 %%
@@ -252,7 +250,7 @@ for i = 1:1:5
         % plot(w,(squeeze(ho_pha(i,j,:))), 'k--', 'LineWidth',1.5)
         % plot(w,(squeeze(hm_pha(i,j,:))), 'LineWidth',1.2)
         plot(w,(squeeze(h_pha(i,j,:))), 'g', 'LineWidth',1.5)
-        % plot(w,(squeeze(h2_pha(i,j,:))), 'r', 'LineWidth',2)
+        % plot(w,(squeeze(h2_pha(i,j,:))), 'y', 'LineWidth',2)
         plot(w,(squeeze(hp_pha(i,j,:))), 'r', 'LineWidth',1.5)
 
 
@@ -309,9 +307,9 @@ for i = 1:1:5
         plot(ffrf,squeeze(mag2db(Gfrf_mag(i,j,:))), 'b',   'LineWidth', 1.5)
         % plot(w,mag2db(squeeze(ho_mag(Out(i),Inp(j),:))), 'k--', 'LineWidth',1.5)
 
-        % plot(w,mag2db(squeeze(hm_mag(Out(i),Inp(j),:))), 'g', 'LineWidth',1.5)
+        % plot(w,mag2db(squeeze(h2_mag(Out(i),Inp(j),:))), 'LineWidth',1.5)
         plot(w,mag2db(squeeze(hp_mag(i,j,:))), 'r','LineWidth',1.5)
-        plot(w,mag2db(squeeze(h_mag(i,j,:))), 'LineWidth',2 )
+        plot(w,mag2db(squeeze(h_mag(i,j,:))),'g', 'LineWidth',2 )
 
 
 

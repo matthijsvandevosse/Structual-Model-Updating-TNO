@@ -1,6 +1,5 @@
-%% Load Sensitivity matrix
 clear structModel
-clear expModes
+%% Load Sensitivity matrix
 
 modeIndex = [1 2 3 4 5]; % Indexes of these measured modes
 n_modes = length(modeIndex); % Number of measured modes
@@ -8,24 +7,23 @@ n_modes = length(modeIndex); % Number of measured modes
 
 structModel.M0 = sparse(Minit);
 structModel.K0 = sparse(Kinit);
-structModel.K_j = Kdiff;
-structModel.M_j{1} = .25*structModel.M0;
+
+structModel.M_j{1} = 0.25*structModel.M0;
+
 % structModel.M_j = [];
+structModel.K_j = Kdiff;
+
 
 %% Actual values for stiffness updating variables, each alpha represents 
 % relative change from nominal stiffness parameter.
 alpha_act = zeros(1,length(structModel.K_j));
 n_alpha = length(alpha_act);
-
 n_beta = length(structModel.M_j);
 
-
-
 %% Optimization structure parameter;
-optimzOpts.tolFun = 1e-5;
-optimzOpts.tolX = 1e-6;
+optimzOpts.tolFun = 1e-3;
+optimzOpts.tolX = 1e-5;
 optimzOpts.toolBox  = 'lsqnonlin';
-
 optimzOpts.optAlgorithm = 'trust-region-reflective';
 % optimzOpts.optAlgorithm = 'Levenberg-Marquardt';
 optimzOpts.gradSel = 'on';
@@ -37,23 +35,12 @@ optimzOpts.maxFunEvals = 12e5;
 
 
 load("eigenFrequencies.mat")
-freqExp = eigenFrequencies;
+freqExp = eigenFrequencies(modeIndex);
 freqExp(4) = eigenFrequencies(5);
-freqExp(5) = 172;
-
-% freqExp(6) = 1825/2/pi;
-% freqExp(7) = 2750/2/pi;
-% freqExp(6) = 183.5;
-
-
-lambdaExp = (2*pi*(freqExp(modeIndex))).^2;
+freqExp(5) = 176;
+lambdaExp = (2*pi*(freqExp)).^2;
 load("Modeshapes_V1.mat")
 L(:,4) = L(:,5);
-L(:,5)=   [-0.0348   -0.2281    0.2703   -0.1972   -0.1636];
-
-% L(:,6) = [1 0 0 0 0];
-% L(:,7) = [1 0 0 0 0];
-
 for i = 1:modeIndex(end)
     [m,index] = max(abs(L([1 2 3 5],i)));
     L(:,i) = L(:,i) / m;
@@ -75,6 +62,7 @@ n = n+1;
 end
 
 psi_m = psiExpAll;
+
 %% Zeros
 clear modeIndexZeros
 clear lambdaExpZeros
@@ -83,65 +71,47 @@ clear zerosDofs
 lambdaExpZeros{1} = [130].^2;
 modeIndexZeros{1} = [ 2];
 zerosDofs{1} = [measDOFs(3), measDOFs(3)];
-
 % 
-lambdaExpZeros{2} = [181 ].^2;
-modeIndexZeros{2} = [ 2];
-zerosDofs{2} = [measDOFs(1), measDOFs(1)];
-
-
-lambdaExpZeros{3} = [187].^2;
-modeIndexZeros{3} = [2];
-zerosDofs{3} = [measDOFs(4), measDOFs(4)];
 % % 
-
-
-% lambdaExpZeros{2} = [23].^2;
-% modeIndexZeros{2} = [1];
-% zerosDofs{2} = [measDOFs(4), measDOFs(4)];
-% % 
-
-
-% lambdaExpZeros{3} = [23.8].^2;
-% modeIndexZeros{3} = [ 1];
-
-% lambdaExpZeros{1} = [32.3 ].^2;
-% modeIndexZeros{1} = [1 ];
-% zerosDofs{1} = [measDOFs(3), measDOFs(3)];
-% 
-% lambdaExpZeros{2} = [ ].^2;
-% modeIndexZeros{2} = [1 ];
+% lambdaExpZeros{2} = [181 ].^2;
+% modeIndexZeros{2} = [ 2];
 % zerosDofs{2} = [measDOFs(1), measDOFs(1)];
 % 
-% lambdaExpZeros{3} = [21.2 ].^2;
-% modeIndexZeros{3} = [1 ];
+% 
+% lambdaExpZeros{3} = [187].^2;
+% modeIndexZeros{3} = [2];
+% zerosDofs{3} = [measDOFs(4), measDOFs(4)];
+% % % 
+
 
 
 
 
 %%
-expModes.lambdaExp = lambdaExp;
 expModes.lambdaExpZeros = lambdaExpZeros;
 expModes.zerosDofs = zerosDofs;
 expModes.modeIndexZeros = modeIndexZeros;
 expModes.lambdaWeightsZeros{1} = [2.5];
-expModes.lambdaWeightsZeros{2} = [2.5];
-expModes.lambdaWeightsZeros{3} = [2.5];
+% expModes.lambdaWeightsZeros{2} = [2.5];
+% expModes.lambdaWeightsZeros{3} = [2.5];
 % expModes.lambdaWeightsZeros{1} = [0];
 % expModes.lambdaWeightsZeros{2} = [0];
 % expModes.lambdaWeightsZeros{3} = [0];
 
+expModes.lambdaExp = lambdaExp;
 expModes.psiExp = psi_m;
 expModes.measDOFs = measDOFs;
 unmeasDOFs = setdiff(1 : N, measDOFs);
 num_measDOFs = length(measDOFs);
 num_unmeasDOFs = length(unmeasDOFs);
+% expModes.lambdaWeights = [1 1 1];
+expModes.lambdaWeights = [20 20 20 20 15];
+% expModes.lambdaWeights = 2*[10 10 10 10];
+% expModes.psiWeights = [1 1 1];
+expModes.psiWeights = ones(n_modes,1);
 
-expModes.lambdaWeights = [20 20 20 10 1 ];
-
-expModes.psiWeights = [1000 200 400 200 25];
-
-
+expModes.psiWeights = [1000 200 400 200 0.1];
+% expModes.psiWeights = [1000 200 400 200];
 expModes.resWeights = ones(n_modes,1);
 
 
@@ -155,8 +125,8 @@ updatingOpts.modeMatch = 2;      % 1: Without forced matching;
                                  % 2: With forced matching;
 updatingOpts.simModesForExpMatch = modeIndex;
 if(updatingOpts.formID < 3)
-    updatingOpts.x_lb = -1.25*ones(n_alpha+n_beta,1);
-    updatingOpts.x_ub =  1.25*ones(n_alpha+n_beta,1);
+    updatingOpts.x_lb = -1.5*ones(n_alpha+n_beta,1);
+    updatingOpts.x_ub =  1.5*ones(n_alpha+n_beta,1);
 else
     updatingOpts.x_lb = [-2*ones(n_alpha,1); -2* ones(num_unmeasDOFs * n_modes,1)];
     updatingOpts.x_ub =  [5*ones(n_alpha,1); 5 * ones(num_unmeasDOFs * n_modes,1)];

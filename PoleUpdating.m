@@ -1,14 +1,14 @@
 %% Load Sensitivity matrix
-clear structModel
+
 modeIndex = [1 2 3 4 5]; % Indexes of these measured modes
 n_modes = length(modeIndex); % Number of measured modes
 %% Assemble structure matrices
 
 structModel.M0 = sparse(Minit);
 structModel.K0 = sparse(Kinit);
-
-structModel.K_j = Kdiff;
 structModel.M_j = [];
+structModel.K_j = Kdiff;
+
 
 %% Actual values for stiffness updating variables, each alpha represents 
 % relative change from nominal stiffness parameter.
@@ -31,15 +31,12 @@ optimzOpts.maxFunEvals = 12e5;
 
 
 load("eigenFrequencies.mat")
-freqExp = eigenFrequencies;
+freqExp = eigenFrequencies(modeIndex);
 freqExp(4) = eigenFrequencies(5);
-freqExp(5) = 172;
-
+freqExp(5) = 176;
 lambdaExp = (2*pi*(freqExp)).^2;
 load("Modeshapes_V1.mat")
 L(:,4) = L(:,5);
-L(:,5)=   [-0.0348   -0.2281    0.2703   -0.1972   -0.1636];
-
 for i = 1:modeIndex(end)
     [m,index] = max(abs(L([1 2 3 5],i)));
     L(:,i) = L(:,i) / m;
@@ -70,12 +67,12 @@ unmeasDOFs = setdiff(1 : N, measDOFs);
 num_measDOFs = length(measDOFs);
 num_unmeasDOFs = length(unmeasDOFs);
 % expModes.lambdaWeights = [1 1 1];
-expModes.lambdaWeights = [20 20 20 10 1];
+expModes.lambdaWeights = [20 20 20 20 15];
 % expModes.lambdaWeights = 2*[10 10 10 10];
 % expModes.psiWeights = [1 1 1];
 expModes.psiWeights = ones(n_modes,1);
 
-expModes.psiWeights = [1000 200 400 200 25];
+expModes.psiWeights = [1000 200 400 200 0.1];
 % expModes.psiWeights = [1000 200 400 200];
 expModes.resWeights = ones(n_modes,1);
 
@@ -89,8 +86,8 @@ updatingOpts.modeMatch = 2;      % 1: Without forced matching;
                                  % 2: With forced matching;
 updatingOpts.simModesForExpMatch = modeIndex;
 if(updatingOpts.formID < 3)
-    updatingOpts.x_lb = -1.25*ones(n_alpha,1);
-    updatingOpts.x_ub =  1.25*ones(n_alpha,1);
+    updatingOpts.x_lb = -1.5*ones(n_alpha,1);
+    updatingOpts.x_ub =  1.5*ones(n_alpha,1);
     
 else
     updatingOpts.x_lb = [-2*ones(n_alpha,1); -2* ones(num_unmeasDOFs * n_modes,1)];

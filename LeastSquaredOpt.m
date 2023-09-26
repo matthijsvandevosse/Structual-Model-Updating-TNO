@@ -8,14 +8,14 @@ sensorloc.Model = [measDOFs(1) measDOFs(3) measDOFs(4)];
 sensorloc.Data = [1 3 5];
 freq = 10:6:28;
 % freq = [15 18 20];
-structModel.D0 = 6.5e-2;
+structModel.D0 = 4.8e-2;
 n = 0;
 clear structModel.alpha{n} structModel.Z{n}
 for index = freq
     n = n+1;
     omega = data_opt.G_ref.Frequency(index)*2*pi;
-    structModel.alpha{n} =  inv((-omega^2*structModel.M0 + structModel.K)/30000);
-    structModel.Z{n} = (-omega^2*structModel.M0 + structModel.K)/30000;
+    structModel.alpha{n} =  inv((-omega^2*structModel.M + structModel.K)/30000);
+    structModel.Z{n} = (-omega^2*structModel.M + structModel.K)/30000;
 end
 %% 0.0045 - 2373.07
 structModel.deltaS = [];
