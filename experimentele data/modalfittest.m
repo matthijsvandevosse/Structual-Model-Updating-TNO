@@ -73,7 +73,7 @@ plot(imag(squeeze(G_ref.ResponseData(:,1,:)))')
 
 %%
 n=0;
-index_mode = [12 21 131 208 373 690 734 1164];
+index_mode = [12 21 131 208 373 690 734 1164 1752 2572];
 sign(1,:) = [1; 1; 1];
 sign(2,:) = [1; -1; -1];
 sign(3,:) = [1; -1; 1];
@@ -81,9 +81,9 @@ sign(4,:) = [1; -1; 1];
 sign(5,:) = [1; -1; 1];
 sign(6,:) = [1; -1; 1];
 sign(7,:) = [1; -1; 1];
-sign(8,:) = [1; 1; -1];
-sign(9,:) = [1; 1; -1];
-
+sign(8,:) = [1; -1; -1];
+sign(9,:) = [1; 1; 1];
+sign(10,:) = [1; 1; -1];
 for index = index_mode
     n = n+1;
     for i = 1:3
@@ -101,6 +101,7 @@ end
 
 %%
 ms_sensor = imag(ms);
+%%
 for i = 1:length(index_mode)
     if i < 7
         [~, index] = max(abs(ms_sensor(:,i)));
@@ -113,7 +114,7 @@ for i = 1:length(index_mode)
 end
 
 figure();
-tiledlayout(3,3,'TileSpacing','Compact','Padding','Compact');
+tiledlayout(4,3,'TileSpacing','Compact','Padding','Compact');
 for i = 1:length(index_mode)
     nexttile
     if i < 7
