@@ -2,7 +2,7 @@ load("Solved.mat")
 %%
 structModel.K = Ksolved;
 
-[Psi_solvedxy, lambdasolved] = eig(full(structModel.M0)\Ksolved, "nobalance");
+[Psi_solvedxy, lambdasolved] = eig(full(structModel.M)\structModel.K, "nobalance");
 
 [lambdasolved,dummyInd] = sort(diag(lambdasolved), 'ascend');
 

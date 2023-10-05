@@ -276,7 +276,7 @@ for i = 1:1:5
 
 
         if i ==1 & j == 1
-        lgd = legend(["FRF", "Init", "Updated",],Location="southwest");
+        lgd = legend(["FRF", "Mass updated", "Updated",],Location="southwest");
         end
         lgd.FontSize = 18;  % xline(data_opt.G_ref.Frequency(freq)*2*pi)
 

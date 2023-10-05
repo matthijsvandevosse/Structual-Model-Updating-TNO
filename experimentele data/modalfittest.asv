@@ -1,8 +1,8 @@
 load('BeamModal_O12345I123.mat')
 
-frf = permute(G_ref.ResponseData(:,:,5:300),[3 1 2]);
+frf = permute(G_ref.ResponseData(:,:,5:900),[3 1 2]);
 
-f = G_ref.Frequency(5:300);
+f = G_ref.Frequency(5:900);
 frf_obj = frd(frf, f);
 w = logspace(0,4,900)/2/pi;
 w2 = f;
@@ -12,8 +12,8 @@ fs = 1/G_ref.Ts ;
 G = idfrd(permute(frf,[2 3 1]),f,0,'FrequencyUnit','Hz');
 
 np = 42;
-np = 16;
-nz = 12;
+np = 12;
+nz = 8;
 
 sys = tfest(G,np,nz)
 
@@ -30,21 +30,21 @@ Modes = 15
 fn
 ofrf_p = permute(ofrf,([2 3 1]));
 
+
+%%
+ofrf_p = frf;
 hm2_frf = frd(ofrf_p, f);
 
 [hm2_mag,hm2_pha   ,wfrf]   = bode(hm2_frf, f);
 
 
 %%
-[frf]  = freqresp(sys,f, 'Hz');
-hm2_frf = frd(frf, f);
+[frf]  = freqresp(sys,f);
+
 frf = permute(frf,[3 1 2]);
-
-[hm2_mag,hm2_pha]   = bode(hm2_frf, f);
-
 %%
-eigenFrequencies = [ModalFitData.eigenFrequencies([1 2 3])]
-[fn,dr,ms,ofrf] = modalfit(frf, f, fs, 12, 'FitMethod', 'lsrf', 'FreqRange', [1 50], 'PhysFreq', eigenFrequencies);
+eigenFrequencies = [ModalFitData.eigenFrequencies([1 2 3]);]
+[fn,dr,ms,ofrf] = modalfit(frf, f, fs, 17, 'FitMethod', 'lsrf', 'FreqRange', [1 50], 'PhysFreq', eigenFrequencies);
 fn
 
 ofrf_p = permute(ofrf,([2 3 1]));
@@ -230,4 +230,79 @@ for i = 1:length(index_mode)
 
 end
 
+%% Test bode diagram with modal form
+nModes = 5;
+Dm = [    1    1   0.5 0.25 0.25];
+m = [1 1 1 1e-1 1e-2];
+lambda = ModalFitData.eigenFrequencies([1 2 3 4 5]).^2;
+
+clear G
+for i = 1:nModes
+    % R = inv(full(structModel.M0))*Psi_solvedxy(:,i);
+    % Psi_squared = inv(full(structModel.M0))*Psi_solvedxy(:,i)*Psi_solvedxy(:,i)';
+    Psi_squared = L(:,i)*L(:,i)';
+    ms_squared = imag(ms(:,i))*imag(ms(:,i))'
+    if i > 1
+         G = G + 150*Psi_squared(:,[1 3 5]) * tf(m(i), [1 Dm(i) lambda(i)]);
+         G2 = G2 + ms_squared(:,[1 3 5]) * tf(1, [1 dr(i) fn(i).^2]);
+
+    else
+        % G =Psi_solvedxy([measDOFs(1) measDOFs(3) measDOFs(4)],i) * Psi_solvedxy([measDOFs(1) measDOFs(3) measDOFs(4)],i)'* tf(1, [1 Dm(i,i) lambdasolved(i)]);
+        % G = 0.0012*Psi_squared([measDOFs(1) measDOFs(3) measDOFs(4)],[measDOFs(1) measDOFs(3) measDOFs(4)])* tf(1, [1 Dm(i,i) lambdasolved(i)]);
+        G = 150*Psi_squared(:,[1 3 5])  * tf(1, [m(i) Dm(i) lambda(i)]);
+        G2 = ms_squared(:,[1 3 5])  * tf(1, [1 dr(i) fn(i).^2]);
+
+    end
+end
+
+[G_mag,G_pha, w] = bode(G, w);
+[G2_mag,G2_pha, w] = bode(G2, w);
+
+Out = [1 1 2 2 3 3];
+In = [1 1 2 2 3 3];
+figure(26);
+tiledlayout(5,3,'TileSpacing','Compact','Padding','Compact');
+for i = 1:1:5
+    for j = 1:3
+        nexttile
+        hold on
+
+        set(gca, 'XScale', 'log')
+        % grid on
+
+        set(gca,'ytick',[-50,0,50])
+
+
+        plot(ffrf,squeeze(mag2db(Gfrf_mag(i,j,:))), 'b',   'LineWidth', 1.5)
+
+          plot(w,mag2db(squeeze(G2_mag(i,j,:))),'k', 'LineWidth',2 )
+        
+        xline(fn ...
+            )
+
+        % xline(data_opt.G_ref.Frequency(freq)*2*pi)
+
+        if i ==1 & j == 1
+            lgd = legend(["FRF", "Model Paul", "New",],Location="southwest");
+        end
+        lgd.FontSize = 18;
+        % legend(["FRF", "Updated Zeros and Poles",],Location="southwest")
+        if i==3 && j==2;
+            xlabel('f [Hz]')
+        elseif i~=3
+            xticklabels({})
+        end
+        if j==1 && i==3
+            ylabel('Mag [dB]')
+        elseif j~=1
+            yticklabels({})
+        end
+        xlim([1,2000])
+        ylim([-75,80])
+        set(gca, 'Fontsize', 13)
+        set(gca, 'LineWidth', 1.25)
+        box on
+
+    end
+end
 
