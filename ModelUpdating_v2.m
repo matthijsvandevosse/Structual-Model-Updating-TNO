@@ -19,7 +19,7 @@ nonmeasDOFs =  N/2+[12];
 %%
 PoleUpdating
 %%
-PoleZeroUpdating
+% PoleZeroUpdating
 
 %%
 

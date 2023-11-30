@@ -292,21 +292,21 @@ Minitx = Minit(1:size(Minit,1)/2,1:size(Minit,1)/2);
 Myinit = Minit(size(Minit,1)/2+1:2*size(Minit,1)/2,size(Minit,1)/2+1:end);
 Kyinit = Kinit(size(Kinit,1)/2+1:2*size(Kinit,1)/2,size(Kinit,1)/2+1:2*size(Kinit,1)/2);
 %%
-
-
-
-[Psi_solved, lambdasolved] = eig(Myinit\Kyinit);
-
-
-
-[lambdasolved,dummyInd] = sort(diag(lambdasolved), 'ascend');
-lambdasolved = lambdasolved(1:5);
-Psi_solved = Psi_solved(:, dummyInd(1:5));
-
-for i = 1:5
-    [~,index] = max(abs(Psi_solved(:,i)));
-    Psi_solved(:,i) = Psi_solved(:,i) / Psi_solved(index,i);
-end
+% 
+% 
+% 
+% [Psi_solved, lambdasolved] = eig(Minit\Kinit);
+% 
+% 
+% 
+% [lambdasolved,dummyInd] = sort(diag(lambdasolved), 'ascend');
+% lambdasolved = lambdasolved(1:5);
+% Psi_solved = Psi_solved(:, dummyInd(1:5));
+% 
+% for i = 1:5
+%     [~,index] = max(abs(Psi_solved(:,i)));
+%     Psi_solved(:,i) = Psi_solved(:,i) / Psi_solved(index,i);
+% end
 
 
 %% Spring1 Matrices
@@ -387,7 +387,7 @@ Kdiff{7} = sparse(Kinit - KE5);
 Kdiff{8} = sparse(Kinit - KE6);
 Kdiff{9} = sparse(Kinit - Knu); 
 Kdiff{10} = sparse(Kinit - KE);
-Kdiff{11} = sparse( Kinit - Kmotor);
+% Kdiff{11} = sparse( Kinit - Kmotor);
 
 % [Psi_solved, lambdasolved] = eig(Minit\Kinit);
 % 

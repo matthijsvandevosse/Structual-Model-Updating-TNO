@@ -1,6 +1,6 @@
 %% Load Sensitivity matrix
 
-modeIndex = [1:8]; % Indexes of these measured modes
+modeIndex = [1:4]; % Indexes of these measured modes
 n_modes = length(modeIndex); % Number of measured modes
 %% Assemble structure matrices
 
@@ -27,24 +27,55 @@ optimzOpts.maxIter = 50e3;
 optimzOpts.maxFunEvals = 12e5;
 
 
+% %% Simulate "experimental data"
+% 
+% 
+% load("eigenFrequencies.mat")
+% eigenFrequencies(6) = 290;
+% eigenFrequencies(7) = 438;
+% eigenFrequencies(8) = 643;
+% freqExp = eigenFrequencies(modeIndex);
+% freqExp(4) = eigenFrequencies(5);
+% freqExp(5) = 172;
+% lambdaExp = (2*pi*(freqExp)).^2;
+% load("Modeshapes_V1.mat")
+% L(:,4) = L(:,5);
+% L(:,5) =   [ -0.0482   -0.5369    1.0000   -0.6948   -0.2233];
+% L(:,6) =   [   -0.5244    0.5093    0.1579   -0.5494    1.0000];
+% L(:,7) =   [   -0.5918    1.0000   -0.7506    0.9519   -0.8093];
+% L(:,8) =    [   1.0000   -0.9733    0.3060    0.6149   -0.8124];
+% 
+% for i = 1:modeIndex(end)
+%     [m,index] = max(abs(L([1 2 3 5],i)));
+%     L(:,i) = L(:,i) / m;
+% end
+% 
+% 
+% psiExpAll = zeros(length(measDOFs),1);
+% n = 1;
+% for i = modeIndex
+% psiExpAll([1], n) = L(1,i);
+% psiExpAll([2], n) = L(2,i);
+% psiExpAll([3], n) = L(3,i);
+% psiExpAll([4], n) = L(5,i);
+% % psiExpAll([5], n) = 0.9999*L(1,i);
+% % psiExpAll([6], n) = 0.9999*L(2,i);
+% % psiExpAll([7], n) = 0.9999*L(3,i);
+% % psiExpAll([8], n) = 0.9999*L(5,i);
+% n = n+1;
+% end
+% 
+% psi_m = psiExpAll;
 %% Simulate "experimental data"
 
 
-load("eigenFrequencies.mat")
-eigenFrequencies(6) = 290;
-eigenFrequencies(7) = 438;
-eigenFrequencies(8) = 643;
-freqExp = eigenFrequencies(modeIndex);
-freqExp(4) = eigenFrequencies(5);
-freqExp(5) = 172;
-lambdaExp = (2*pi*(freqExp)).^2;
-load("Modeshapes_V1.mat")
-L(:,4) = L(:,5);
-L(:,5) =   [ -0.0482   -0.5369    1.0000   -0.6948   -0.2233];
-L(:,6) =   [   -0.5244    0.5093    0.1579   -0.5494    1.0000];
-L(:,7) =   [   -0.5918    1.0000   -0.7506    0.9519   -0.8093];
-L(:,8) =    [   1.0000   -0.9733    0.3060    0.6149   -0.8124];
+load("G_ss_modal_fitted.mat")
 
+lambdaExp = diag(-G_ss_Modal.A(9:end,1:8));
+freqExp =sqrt(lambdaExp)/2/pi;
+
+L = G_ss_Modal.C(:,1:8)
+%%
 for i = 1:modeIndex(end)
     [m,index] = max(abs(L([1 2 3 5],i)));
     L(:,i) = L(:,i) / m;
@@ -58,29 +89,26 @@ psiExpAll([1], n) = L(1,i);
 psiExpAll([2], n) = L(2,i);
 psiExpAll([3], n) = L(3,i);
 psiExpAll([4], n) = L(5,i);
-% psiExpAll([5], n) = 0.9999*L(1,i);
-% psiExpAll([6], n) = 0.9999*L(2,i);
-% psiExpAll([7], n) = 0.9999*L(3,i);
-% psiExpAll([8], n) = 0.9999*L(5,i);
 n = n+1;
 end
 
 psi_m = psiExpAll;
-
 %%
-expModes.lambdaExp = lambdaExp;
-expModes.psiExp = psi_m;
+expModes.lambdaExp = lambdaExp(1:n_modes);
+expModes.psiExp = psi_m(:,1:n_modes);
 expModes.measDOFs = measDOFs;
 unmeasDOFs = setdiff(1 : N, measDOFs);
 num_measDOFs = length(measDOFs);
 num_unmeasDOFs = length(unmeasDOFs);
 % expModes.lambdaWeights = [1 1 1];
 expModes.lambdaWeights = [20 20 20 20 2 5 5 5 ];
+expModes.lambdaWeights = expModes.lambdaWeights(1:n_modes);
 % expModes.lambdaWeights = 2*[10 10 10 10];
 % expModes.psiWeights = [1 1 1];
 expModes.psiWeights = ones(n_modes,1);
 
 expModes.psiWeights = [1000 200 400 200 10 50 50 50];
+expModes.psiWeights = expModes.psiWeights(1:n_modes);
 % expModes.psiWeights = [1000 200 400 200];
 expModes.resWeights = ones(n_modes,1);
 
