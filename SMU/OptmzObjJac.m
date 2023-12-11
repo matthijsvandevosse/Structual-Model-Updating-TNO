@@ -132,7 +132,7 @@ if ( updatingOpts.formID ~= 3 )
     eigsOpts.tol = eps;
 
     %% poles
-    [psi, lambda] = eig(full(structModel.M)\full(structModel.K), "nobalance");
+    [psi, lambda] = eigs(structModel.K, structModel.M, 10,1e3);
     [lambda, ind] = sort( diag(lambda), 'ascend' );
     psi = psi(:, ind);
     % psi_m: entries in simulated mode shape psi that correspond to the
@@ -162,15 +162,15 @@ if ( updatingOpts.formID ~= 3 )
     %% Zeros
     if updatingOpts.formID == 1.9
         for zero_i = 1:length(expModes.zerosDofs)
-            Mtemp = full(structModel.M);
-            Ktemp = full(structModel.K);
+            Mtemp = structModel.M;
+            Ktemp = structModel.K;
 
             Mtemp(expModes.zerosDofs{zero_i}(1),:) = [];
             Mtemp(:,expModes.zerosDofs{zero_i}(2)) = [];
             Ktemp(expModes.zerosDofs{zero_i}(1),:) = [];
             Ktemp(:,expModes.zerosDofs{zero_i}(2)) = [];
 
-            [psi_z, lambda_zero] = eig((Mtemp)\(Ktemp), "nobalance");
+            [psi_z, lambda_zero] = eigs(Ktemp, Mtemp, 10,1);
             [lambda_zero, ind] = sort( diag(lambda_zero), 'ascend' );
             psi_z = psi_z(:, ind);
             simModes.psi_z{zero_i} = psi_z(:,expModes.modeIndexZeros{zero_i});

@@ -2,7 +2,7 @@ clear all
 close all
 
 
-E = 190e9;
+E = 120e9;
 nu = 0.29;
 rho = 7.8e3;
 
