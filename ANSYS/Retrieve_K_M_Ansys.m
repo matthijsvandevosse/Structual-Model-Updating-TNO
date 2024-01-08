@@ -1,6 +1,9 @@
 clear all
 %% Find locations of file.full
 % Location of Ansys work files
+dir_FEM = '/Users/matthijsvandevosse/Library/CloudStorage/OneDrive-TUEindhoven/BEAM FEM';
+addpath(dir_FEM)
+
 dir_FEM = '/Users/matthijsvandevosse/Library/CloudStorage/OneDrive-TUEindhoven/BEAM FEM/Beam_FEM_files/dp0';
 addpath(dir_FEM)
 
@@ -45,7 +48,7 @@ for ii = 1:length(FILES)-6
         retreive_mass = 0;
     end
     tic
-    [Stiff, Mass, node_mapping] = ansys2Structural([FILES{ii}.folder '/' 'file.full'],nodes, retreive_mass);
+    [Stiff, Mass, node_mapping] = ansys2Structural([FILES{ii}.folder '/' 'file.full'], retreive_mass);
     toc
 
     % remove "lose" nodes
