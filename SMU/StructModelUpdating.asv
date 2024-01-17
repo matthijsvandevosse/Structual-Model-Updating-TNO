@@ -165,6 +165,7 @@ expModes.n_meas = length(expModes.measDOFs);
 if (size(expModes.measDOFs, 1) < size(expModes.measDOFs, 2))
     expModes.measDOFs = expModes.measDOFs';
 end
+
 unmeasDOFs = setdiff( (1 : N)', expModes.measDOFs);
 expModes.n_unmeas = length(unmeasDOFs);
 expModes.n_modes = length(expModes.lambdaExp); % Number of measured modes
@@ -271,7 +272,6 @@ end
 
 % Reordering stiffness, mass, influence matrices by measured and unmeasured
 % DOFs
-orderIndex = [expModes.measDOFs; unmeasDOFs];
 orderIndex = 1:N;
 structModel.M0 = structModel.M0(orderIndex, orderIndex);
 structModel.K0 = structModel.K0(orderIndex, orderIndex);
@@ -280,7 +280,7 @@ structModel.K0 = structModel.K0(orderIndex, orderIndex);
 
 if updatingOpts.formID == 1.9
     
-    if ~ismember(expModes{zerosDofs})
+    if ~isfield(expModes,'zerosDofs')
         expModes.zerosDofs = [];
     end
 
@@ -290,6 +290,7 @@ if updatingOpts.formID == 1.9
         end
     end
 end
+
 
 for i = 1 : n_alpha
     structModel.K_j{i} = structModel.K_j{i}(orderIndex, orderIndex);

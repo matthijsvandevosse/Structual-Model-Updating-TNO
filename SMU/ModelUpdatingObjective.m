@@ -74,8 +74,10 @@ switch updatingOpts.formID
         r = ObjFuncMPDLsqnonlin(expModes, simModes, 1, 1, 1);
     case 1.2
         r = ObjFuncMPDLsqnonlin(expModes, simModes, 2, 1, 1);
-    case 1.9
+    case 1.3
         r = ObjFuncMPDLsqnonlinZEROS(expModes, simModes, 0, 1, 1);
+    case 1.4
+        r = ObjFuncMPDLsqnonlinDeltaPsi(expModes, simModes, 0, 1, 1);
     case 2.0
         r = ObjFuncMPDLsqnonlin(expModes, simModes, 0, 1, 2);
     case 2.1

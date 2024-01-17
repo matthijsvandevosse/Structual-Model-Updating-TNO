@@ -29,8 +29,7 @@ actDOFs = node_mapping.z(output_nodes(idx));
 nonmeasDOFs = node_mapping.z(output_nodes(idx));
 
 
-measDOFs = [measDOFs(1), 0; measDOFs(1), measDOFs(4); measDOFs(2), measDOFs(3)];
-% measDOFs = [ measDOFs(1), measDOFs(4); measDOFs(2), measDOFs(3)];
+measDOFs = [measDOFs(1), measDOFs(4); measDOFs(2), measDOFs(3)];
 
 
 
@@ -54,9 +53,7 @@ freqExp
 %%
 [~, idx] = min(abs( coord(output_nodes,1)+0.25 - update_sensor_loc(:)'));
 measDOFs = node_mapping.z(output_nodes(idx));
-psi_m = psiExpAll;
-
-
+psi_m = psiExpAll
 for i = 1:length(modeIndex)
 
     [~, index] = max(abs(Psi_solved(measDOFs(1:4),i)));

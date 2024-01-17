@@ -87,14 +87,19 @@ psiExpAll([4], n) = L(5,i);
 n = n+1;
 end
 
-psi_m = psiExpAll;
+% psi_m = [ psiExpAll(1,:) + psiExpAll(4,:); psiExpAll(2,:) - psiExpAll(3,:)];
+
+
+psi_m = [psiExpAll(1,:); (psiExpAll(1,:) - psiExpAll(4,:)); (psiExpAll(2,:) - psiExpAll(3,:))];
 %%
 expModes.lambdaExp = lambdaExp(1:n_modes);
 expModes.psiExp = psi_m(:,1:n_modes);
 expModes.measDOFs = measDOFs;
-unmeasDOFs = setdiff(1 : N, measDOFs);
+
+unmeasDOFs = setdiff(1 : N, measDOFs(:,1));
 num_measDOFs = length(measDOFs);
 num_unmeasDOFs = length(unmeasDOFs);
+
 % expModes.lambdaWeights = [1 1 1];
 expModes.lambdaWeights = [30 30 20 20  15];
 expModes.lambdaWeights = [50 50 30 30 0 10];
@@ -112,9 +117,12 @@ expModes.resWeights = ones(n_modes,1);
 
 
 %% Model updating parameter
-updatingOpts.formID = 1;       % 1: Modal property diff (MAC) ;
+updatingOpts.formID = 1.4;       % 1: Modal property diff (MAC) ;
                                 % 2: Modal property diff (V_mDiff);
                                  % 3: Modal dynamic residual;
+                                 % 1.3: Zero Matching
+                                 % 1.4: Delta Psi Matching
+
 updatingOpts.modeMatch = 2;      % 1: Without forced matching;
                                  % 2: With forced matching;
 updatingOpts.simModesForExpMatch = modeIndex;
@@ -127,12 +135,21 @@ else
     updatingOpts.x_ub =  [5*ones(n_alpha,1); 5 * ones(num_unmeasDOFs * n_modes,1)];
 end
 
-%% MultiStart optimization
+%% Start optimization
 numRuns = 1;
 randSeed = round(100*rand(1));
 filename = ['TEST' num2str(updatingOpts.formID) '_JAC' optimzOpts.gradSel '_' optimzOpts.optAlgorithm '.mat'];
 
-MultiRunModelUpdating
+
+n_x = length(updatingOpts.x_lb);
+optimzOpts.x0 = zeros(n_x, 1);
+
+
+updtResults = StructModelUpdating(structModel, expModes, updatingOpts, optimzOpts);
+x = updtResults.xOpt;
+fval = updtResults.fvalOpt;
+optmzSolvOutput = updtResults.output;
+    
 %%
 x_2 = x(1:n_alpha)
 x_2(2) = abs(x_2(2))

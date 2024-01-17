@@ -1,6 +1,6 @@
 %% Load Sensitivity matrix
 
-modeIndex = [1 2 3 4 5]; % Indexes of these measured modes
+modeIndex = [1 2 3 4 5 6]; % Indexes of these measured modes
 n_modes = length(modeIndex); % Number of measured modes
 %% Assemble structure matrices
 
@@ -28,55 +28,22 @@ optimzOpts.maxFunEvals = 12e5;
 
 
 %% Simulate "experimental data" with old experiments
-
-
-load("eigenFrequencies.mat")
-freqExp = eigenFrequencies;
-freqExp(4) = eigenFrequencies(5);
-freqExp(5) = 176;
-freqExp(6) = 176;
-lambdaExp = (2*pi*(freqExp)).^2;
-load("Modeshapes_V1.mat")
-L(:,4) = L(:,5);
-L(:,6) = L(:,5);
-for i = 1:modeIndex(end)
-    [m,index] = max(abs(L([1 2 3 5],i)));
-    L(:,i) = L(:,i) / m;
-end
-
-
-psiExpAll = zeros(length(measDOFs),1);
-n = 1;
-for i = modeIndex
-psiExpAll([1], n) = L(1,i);
-psiExpAll([2], n) = L(2,i);
-psiExpAll([3], n) = L(3,i);
-psiExpAll([4], n) = L(5,i);
-n = n+1;
-end
-
-psi_m = psiExpAll;
-%% Simulate "experimental data" with new experiment data
-% addpath("/Users/matthijsvandevosse/FRF_Balk_Processing/FRFs")
-% 
-% load("G_ss_modal_fitted_2.mat")
-% 
-% lambdaExp = diag(-G_ss_Modal.A(9:end,1:8));
-% freqExp =sqrt(lambdaExp)/2/pi;
-% 
-% L = G_ss_Modal.C(:,1:8);
-% 
-% % L(:,5:7) = [];
 % 
 % 
-% 
-% 
+% load("eigenFrequencies.mat")
+% freqExp = eigenFrequencies;
+% freqExp(4) = eigenFrequencies(5);
+% freqExp(5) = 176;
+% freqExp(6) = 176;
+% lambdaExp = (2*pi*(freqExp)).^2;
+% load("Modeshapes_V1.mat")
+% L(:,4) = L(:,5);
+% L(:,6) = L(:,5);
 % for i = 1:modeIndex(end)
 %     [m,index] = max(abs(L([1 2 3 5],i)));
 %     L(:,i) = L(:,i) / m;
 % end
 % 
-% % L = flip(L,1);
 % 
 % psiExpAll = zeros(length(measDOFs),1);
 % n = 1;
@@ -89,23 +56,60 @@ psi_m = psiExpAll;
 % end
 % 
 % psi_m = psiExpAll;
+% Simulate "experimental data" with new experiment data
+addpath("/Users/matthijsvandevosse/FRF_Balk_Processing/FRFs")
+
+load("G_ss_modal_fitted_2.mat")
+
+lambdaExp = diag(-G_ss_Modal.A(9:end,1:8));
+freqExp =sqrt(lambdaExp)/2/pi;
+
+L = G_ss_Modal.C(:,1:8);
+
+
+
+
+
+for i = 1:modeIndex(end)
+    [m,index] = max(abs(L([1 2 3 5],i)));
+    L(:,i) = L(:,i) / m;
+end
+
+% L = flip(L,1);
+
+psiExpAll = zeros(length(measDOFs),1);
+n = 1;
+for i = modeIndex
+psiExpAll([1], n) = L(1,i);
+psiExpAll([2], n) = L(2,i);
+psiExpAll([3], n) = L(3,i);
+psiExpAll([4], n) = L(5,i);
+n = n+1;
+end
+
+psi_m = psiExpAll;
 %%
 expModes.lambdaExp = lambdaExp(1:n_modes);
 expModes.psiExp = psi_m(:,1:n_modes);
+
+expModes.expDeltaModes = ones(size(measDeltaDofs));
+
 expModes.measDOFs = measDOFs;
+expModes.measDeltaDofs = measDeltaDofs;
 unmeasDOFs = setdiff(1 : N, measDOFs);
 num_measDOFs = length(measDOFs);
 num_unmeasDOFs = length(unmeasDOFs);
+
 % expModes.lambdaWeights = [1 1 1];
 expModes.lambdaWeights = [30 30 20 20  15];
-expModes.lambdaWeights = [30 30 30 30 30 20];
+expModes.lambdaWeights = [50 50 30 30 0 10];
 expModes.lambdaWeights = expModes.lambdaWeights(1:n_modes);
 % expModes.lambdaWeights = 2*[10 10 10 10];
 % expModes.psiWeights = [1 1 1];
 expModes.psiWeights = ones(n_modes,1);
 
 expModes.psiWeights = [1000 200 400 200 0.1 10];
-expModes.psiWeights = [1000 400 400 200 0 100 ];
+expModes.psiWeights = [2000 400 400 200 0 100 ];
 expModes.psiWeights = expModes.psiWeights(1:n_modes);
 % expModes.psiWeights = [1000 200 400 200];
 expModes.resWeights = ones(n_modes,1);
@@ -113,9 +117,12 @@ expModes.resWeights = ones(n_modes,1);
 
 
 %% Model updating parameter
-updatingOpts.formID = 1;       % 1: Modal property diff (MAC) ;
+updatingOpts.formID = 1.4;       % 1: Modal property diff (MAC) ;
                                 % 2: Modal property diff (V_mDiff);
                                  % 3: Modal dynamic residual;
+                                 % 1.3: Zero Matching
+                                 % 1.4: Delta Psi Matching
+
 updatingOpts.modeMatch = 2;      % 1: Without forced matching;
                                  % 2: With forced matching;
 updatingOpts.simModesForExpMatch = modeIndex;
@@ -128,12 +135,23 @@ else
     updatingOpts.x_ub =  [5*ones(n_alpha,1); 5 * ones(num_unmeasDOFs * n_modes,1)];
 end
 
-%% MultiStart optimization
+%% Start optimization
 numRuns = 1;
 randSeed = round(100*rand(1));
 filename = ['TEST' num2str(updatingOpts.formID) '_JAC' optimzOpts.gradSel '_' optimzOpts.optAlgorithm '.mat'];
 
-MultiRunModelUpdating
+
+n_x = length(updatingOpts.x_lb);
+optimzOpts.x0 = zeros(n_x, 1);
+
+
+updtResults = StructModelUpdating(structModel, expModes, updatingOpts, optimzOpts);
+x(:,runNum) = updtResults.xOpt;
+fval(runNum) = updtResults.fvalOpt;
+exit_flag(runNum) = updtResults.exitFlag;
+gradient(:,runNum) = updtResults.gradient;
+optmzSolvOutput{runNum} = updtResults.output;
+    
 %%
 x_2 = x(1:n_alpha)
 x_2(2) = abs(x_2(2))

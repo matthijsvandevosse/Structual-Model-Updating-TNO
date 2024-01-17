@@ -87,3 +87,22 @@ if n_modes >7
     ylim([-1.5 1.5])
     title('Eigth Mode')
 end
+
+
+%%
+figure
+hold on
+plot(sensor_loc([1]), abs( Psi_solved(measDOFs(1),1) - Psi_solved(measDOFs(4),1)) , 'g*' , LineWidth=2)
+plot(sensor_loc([2]), abs(Psi_solved(measDOFs(2),1) - Psi_solved(measDOFs(3),1)) , 'g*' , LineWidth=2)
+
+
+plot(sensor_loc([1]), abs(Psi_o(measDOFs(1),1) - Psi_o(measDOFs(4),1)) , '.k', LineWidth=2)
+plot(sensor_loc([2]), abs(Psi_o(measDOFs(2),1) - Psi_o(measDOFs(3),1)) , '.k', LineWidth=2)
+
+
+plot(sensor_loc([1]), abs(psi_m(1,1) -psi_m(4,1))  , 'r*', 'MarkerSize',15, LineWidth=2)
+plot(sensor_loc([2]), abs(psi_m(2,1) -psi_m(3,1))  , 'r*', 'MarkerSize',15, LineWidth=2)
+
+legend('Solved', 'init', 'Measured', 'Validation')
+ylim([-1.2 1.2])
+title('First Relative Mode')

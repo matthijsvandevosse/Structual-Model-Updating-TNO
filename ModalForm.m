@@ -10,6 +10,11 @@ structModel.K = Ksolved;
 
 Psi_solved = Psi_solved(:,dummyInd);
 
+strut_nodes1 = nodes(coord(:,1) > .25);
+strut_nodes2 = nodes(coord(:,2)<0);
+
+structModel.D0(strut_nodes1,strut_nodes1) = strut_damping1*structModel.D0(strut_nodes1,strut_nodes1);
+structModel.D0(strut_nodes2,strut_nodes2) = strut_damping2*structModel.D0(strut_nodes2,strut_nodes2);
 
 for i = 1:size(Psi_solved,2)
     m = (Psi_solved(:,i))'*full(structModel.M0)*(Psi_solved(:,i));
@@ -17,8 +22,8 @@ for i = 1:size(Psi_solved,2)
     Dm(i,i) = Psi_solved(:,i)'*structModel.D0*Psi_solved(:,i);
 end
 
-Dm(1,1) = Dm(1,1)*3.25;
-Dm(2,2) = Dm(2,2)*1.5;
+% Dm(1,1) = Dm(1,1)*3.25;
+% Dm(2,2) = Dm(2,2)*1.5;
 %%
 clear G
 
