@@ -87,10 +87,10 @@ psiExpAll([4], n) = L(5,i);
 n = n+1;
 end
 
-% psi_m = [ psiExpAll(1,:) + psiExpAll(4,:); psiExpAll(2,:) - psiExpAll(3,:)];
+psi_m = [ psiExpAll(1,:); psiExpAll(2,:); psiExpAll(3,:); psiExpAll(4,:)];
 
 
-psi_m = [psiExpAll(1,:); (psiExpAll(1,:) - psiExpAll(4,:)); (psiExpAll(2,:) - psiExpAll(3,:))];
+% psi_m = [psiExpAll(1,:); (psiExpAll(1,:) - psiExpAll(4,:)); (psiExpAll(2,:) - psiExpAll(3,:))];
 %%
 expModes.lambdaExp = lambdaExp(1:n_modes);
 expModes.psiExp = psi_m(:,1:n_modes);

@@ -28,9 +28,11 @@ actDOFs = node_mapping.z(output_nodes(idx));
 [~, idx] = min(abs( coord(output_nodes,1)+0.25 - val_sensor_loc_x(:)'));
 nonmeasDOFs = node_mapping.z(output_nodes(idx));
 
+% relative mode shapes
+% measDOFs = [measDOFs(1), 0; measDOFs(1), measDOFs(4); measDOFs(2), measDOFs(3)];
 
-measDOFs = [measDOFs(1), 0; measDOFs(1), measDOFs(4); measDOFs(2), measDOFs(3)];
-% measDOFs = [ measDOFs(1), measDOFs(4); measDOFs(2), measDOFs(3)];
+% absolute mode shapes
+measDOFs = [ measDOFs(1), 0; measDOFs(2), 0; measDOFs(3), 0; measDOFs(4), 0];
 
 
 
