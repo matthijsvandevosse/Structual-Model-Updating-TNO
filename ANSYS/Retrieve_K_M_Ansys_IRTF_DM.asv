@@ -48,8 +48,7 @@ for ii = 1:length(input_nodes_top)
 end
 
 
-Kdiff = [];
-Mdiff = [];
+
 %% Retrieve Stiffness and Mass matrix
 
 for ii = 1:length(FILES)
@@ -117,11 +116,21 @@ for ii = 1:length(FILES)
         end
     end
 end
- 
+%%
+deletednodes = find(isnan(node_mapping.z(:)));
+output_nodes_cleaned = output_nodes;
+for ii = 1:length(deletednodes)
+
+   output_nodes_cleaned(find(output_nodes_cleaned == deletednodes(ii))) = [];
+   % input_nodes_mirror(find(input_nodes_mirror == deletednodes(ii))) = [];
+
+end
+
+
+
 %% Find resonant frequencies and modeshapes
 nModes =1;
-Mode_hz = [526; 1398.7; 1420.8; 1476.8; 1592.6]; %hz
-Mode_nr = [8; 16; 18; 21; 28];
+Mode_hz = [526; 1398.7; ]; %hz
 
 tic
 [Psi_solved, lambdasolved] = eigs(Kinit, Minit, nModes, (first_mode*2*pi)^2, 'IsSymmetricDefinite', 1, 'Tolerance',1e-4, "Display", 0);
