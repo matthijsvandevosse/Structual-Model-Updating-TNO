@@ -159,7 +159,7 @@ if ( updatingOpts.formID ~= 3 )
     
     
 
-    if( updatingOpts.formID < 2.3)
+    if( updatingOpts.formID < 2.3) && ~( updatingOpts.formID == 1.4)
         % Normalize mode shape vector so that the maximum entry magnitude = 1.
         % The entry index is denoted as q(i).
         for i = 1 : expModes.n_modes
