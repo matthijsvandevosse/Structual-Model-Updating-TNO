@@ -81,7 +81,7 @@ switch updatingOpts.formID
     case 1.3
         jac = JacMPDLsqnonlinZEROS(structModel, expModes, simModes, 0, 1, 1);
     case 1.4
-        jac = JacMPDLsqnonlinMassDeltaPsi(structModel, expModes, simModes, 0, 1, 1);
+        jac = JacMPDLsqnonlinMassDeltaPsi(structModel, expModes, simModes, 0, 2, 1);
     case 2.0
         jac = JacMPDLsqnonlin(structModel, expModes, simModes, 0, 1, 2);
     case 2.1

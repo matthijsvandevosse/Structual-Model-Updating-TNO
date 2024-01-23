@@ -183,44 +183,49 @@ for i = 1 : n_modes
         end
 
     else
-        error('This vector norm is not implemented yet for mass optimization')
         % Length of Psi is normalized to 1.
-        % % % [~, index] = max(abs( simModes.psi(:,i) ));
-        % % % B(:, index) = zeros(N, 1);
-        % % % B(index, :) = zeros(1, N);
-        % % % B(index, index) = 1;
-        % % % % Accommodate different variable names in different MATLAB versions.
-        % % % vers_temp = version( '-release' );
-        % % % MAT_version = str2num( vers_temp(1 : 4) );
-        % % % if (MAT_version >= 2017)
-        % % %     % factorization
-        % % %     dcompB = decomposition(B);
-        % % % else
-        % % %     % LU factorization
-        % % %     [L,U, pp, qq, dgsB] = lu(B);
-        % % % end
-        % % %
-        % % % for j = 1 : n_alpha
-        % % %     b = dLambda(i,j) * structModel.M * simModes.psi(:, i) -...
-        % % %         structModel.K_j{j} * simModes.psi(:, i);
-        % % %     b(index) = 0;
-        % % %     b = sparse(b);
-        % % %     if (MAT_version >= 2017)
-        % % %         v = dcompB \ b;
-        % % %     else
-        % % %         if ~isempty(dgsB)
-        % % %             % use LU reordering
-        % % %             v = qq*(U \ (L \ (pp*(dgsB\b))));
-        % % %         else
-        % % %             v = U \ (L \ b(pp));
-        % % %         end
-        % % %     end
-        % % %     % R. B. Nelson, "Simplified calculation of eigenvector
-        % % %     % derivatives," AIAA journal, vol. 14, pp. 1201-1205, 1976.
-        % % %     c = -simModes.psi(:,i)' *  v ;
-        % % %     dPsi_dAlpha_j = v + c * simModes.psi(:,i);
-        % % %     dPsi_m(:, j, i) = dPsi_dAlpha_j(1 : n_meas);
-        % % % end
+        % factorization
+        dcompB = decomposition(B);
+
+        for j = 1 : n_alpha
+            b = dLambda(i,j) * structModel.M * simModes.psi(:, i) -...
+                structModel.K_j{j} * simModes.psi(:, i);
+            b = sparse(b);
+            
+            v = dcompB \ b;
+
+            % R. B. Nelson, "Simplified calculation of eigenvector
+            % derivatives," AIAA journal, vol. 14, pp. 1201-1205, 1976.
+            c = -simModes.psi(:,i)' *  v ;
+            dPsi_dAlpha_j = v + c * simModes.psi(:,i);
+            dPsi_m(:, j, i) = dPsi_dAlpha_j(1 : n_meas);
+            
+            dPsi_m1(:, j, i) = full(dPsi_dAlpha_j(expModes.measDOFs(:,1)));
+
+            dPsi_m2(any(expModes.measDOFs(:,2),2), j, i) = full(dPsi_dAlpha_j(nonzeros(expModes.measDOFs(:,2))));
+            
+            dPsi_m(:, j, i)  = dPsi_m1(:, j, i)  - dPsi_m2(:, j, i);
+
+
+        end
+        for j = 1 : n_beta
+            b = dLambda(i,j+n_alpha) * structModel.M * simModes.psi(:, i) +...
+                simModes.lambda(i) * structModel.M_j{j} * simModes.psi(:, i);
+            b = sparse(b);
+
+            v = dcompB \ b;
+
+            % R. B. Nelson, "Simplified calculation of eigenvector
+            % derivatives," AIAA journal, vol. 14, pp. 1201-1205, 1976.
+            c = -simModes.psi(:,i)' *  v ;
+            dPsi_dAlpha_j = v + c * simModes.psi(:,i);
+  
+            dPsi_m1(:, j+n_alpha, i) = full(dPsi_dAlpha_j(expModes.measDOFs(:,1)));
+
+            dPsi_m2(any(expModes.measDOFs(:,2),2), j+n_alpha, i) = full(dPsi_dAlpha_j(nonzeros(expModes.measDOFs(:,2))));
+            
+            dPsi_m(:, j+n_alpha, i)  = dPsi_m1(:, j+n_alpha, i)  - dPsi_m2(:, j+n_alpha, i);
+        end
     end
 end
 
