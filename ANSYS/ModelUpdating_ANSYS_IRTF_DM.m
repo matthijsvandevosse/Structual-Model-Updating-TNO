@@ -1,61 +1,40 @@
 clc;clear all; close all
 % close all
 warning('off')
-addpath("/Users/matthijsvandevosse/Library/CloudStorage/OneDrive-TUEindhoven/BEAM FEM")
-addpath(genpath("/Users/matthijsvandevosse/Structual-Model-Updating_matthijs"))
 
-%%
+%% Retrieve the Mass and Stiffness matrices from Ansys
 
-Retrieve_K_M_Ansys
+% Load from Ansys files (Takes a long time!!)
+load_matrices = 0;
+
+Retrieve_K_M_Ansys_IRTF_DM
+
+load('IRTF_DM_K_M_Matrices.mat')
+load('INFO_sensors_actuators.mat')
 
 %%
 
 N = size(Kinit,1);
 
-% measurement points --
-sensor_loc = [45 145 245 345 445]/1000;
-update_sensor_loc = [45 145 245 445]/1000;
-val_sensor_loc_x = 345/1000;
+% Relative modeshape:  [first DOF - second DOF]
 
-
-% act_loc_x = [50  250  450]/1000;
-act_loc_x = [45  245  445]/1000;
-
-[~, idx] = min(abs( coord(output_nodes,1)+0.25 - update_sensor_loc(:)'));
-measDOFs = node_mapping.z(output_nodes(idx));
-[~, idx] = min(abs( coord(output_nodes,1)+0.25 - act_loc_x(:)'));
-actDOFs = node_mapping.z(output_nodes(idx));
-[~, idx] = min(abs( coord(output_nodes,1)+0.25 - val_sensor_loc_x(:)'));
-nonmeasDOFs = node_mapping.z(output_nodes(idx));
-
-
-measDOFs = [measDOFs(1), measDOFs(4); measDOFs(2), measDOFs(3)];
-
+measDOFs = [ node_mapping.z(input_nodes_top) node_mapping.z(input_nodes_back) ];
 
 
 
 %%
-PoleUpdating
-%%
-% PoleZeroUpdating
+PoleUpdating_IRTF_DM
 
 %%
-
-[lambdasolved_sorted,dummyInd] = sort(diag(lambdasolved), 'ascend');
-[lambda_o,dummyInd_o] = sort(diag(lambda_o), 'ascend');
-
-Psi_solved = Psi_solved(:,dummyInd);
-Psi_o = Psi_o(:, dummyInd_o);
-
-naturalfrequency = sqrt(lambdasolved_sorted(1:8))/(2*pi)
-naturalfrequency_0 =  sqrt(lambda_o(1:8))/(2*pi)
+naturalfrequency = sqrt(modeIndex)/(2*pi)
+naturalfrequency_0 =  sqrt(modeIndex)/(2*pi)
 freqExp
 %%
 [~, idx] = min(abs( coord(output_nodes,1)+0.25 - update_sensor_loc(:)'));
 measDOFs = node_mapping.z(output_nodes(idx));
-psi_m = psiExpAll
-for i = 1:length(modeIndex)
+psi_m = psiExpAll;
 
+for i = modeIndex
     [~, index] = max(abs(Psi_solved(measDOFs(1:4),i)));
     Psi_solved(:,i) = sign(dot(Psi_solved(measDOFs,i), psi_m(:,i)))* Psi_solved(:,i) / abs(Psi_solved(measDOFs(index),i));
 
@@ -160,7 +139,7 @@ for i = 1:1:5
 
 
         if i ==1 & j == 1
-            lgd = legend(["FRF", "Mass updated", "Updated",],Location="southwest");
+            lgd = legend(["FRF", "Mass updated", "Updated",],Location,"southwest");
         end
         lgd.FontSize = 18;  % xline(data_opt.G_ref.Frequency(freq)*2*pi)
 
@@ -211,7 +190,7 @@ for i = 1:1:5
         % xline(data_opt.G_ref.Frequency(freq)*2*pi)
 
         if i ==1 & j == 1
-            lgd = legend(["FRF", "Init", "Updated",],Location="southwest");
+            lgd = legend(["FRF", "Init", "Updated",],Location,"southwest");
         end
         lgd.FontSize = 18;
         % legend(["FRF", "Updated Zeros and Poles",],Location="southwest")

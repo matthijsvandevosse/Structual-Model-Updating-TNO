@@ -270,12 +270,6 @@ else
     end
 end
 
-% Reordering stiffness, mass, influence matrices by measured and unmeasured
-% DOFs
-orderIndex = 1:N;
-structModel.M0 = structModel.M0(orderIndex, orderIndex);
-structModel.K0 = structModel.K0(orderIndex, orderIndex);
-
 
 
 if updatingOpts.formID == 1.9
@@ -291,13 +285,6 @@ if updatingOpts.formID == 1.9
     end
 end
 
-
-for i = 1 : n_alpha
-    structModel.K_j{i} = structModel.K_j{i}(orderIndex, orderIndex);
-end
-for i = 1 : n_beta
-    structModel.M_j{i} = structModel.M_j{i}(orderIndex, orderIndex);
-end
 
 if( updatingOpts.formID < 2.3 || updatingOpts.formID == 3.0)
     % Normalize mode shape vector so that the maximum entry magnitude = 1.

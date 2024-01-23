@@ -130,7 +130,7 @@ function updtRslts = StructModelUpdating (structModel, expModes, ...
 %                 [d_f / d_alpha]' = [(d_f / d_r) * ((d_r / d_alpha)]'
 %             (default)
 %          'off': let MATLAB numerically calculate gradient matrix
-%               using finite difference method 
+%               using finite difference method
 %       toolBox - Optimization toolbox
 %            'lsqnonlin' (default)
 %            'fmincon'
@@ -270,12 +270,6 @@ else
     end
 end
 
-% Reordering stiffness, mass, influence matrices by measured and unmeasured
-% DOFs
-orderIndex = 1:N;
-structModel.M0 = structModel.M0(orderIndex, orderIndex);
-structModel.K0 = structModel.K0(orderIndex, orderIndex);
-
 
 
 if updatingOpts.formID == 1.9
@@ -283,23 +277,16 @@ if updatingOpts.formID == 1.9
     if ~isfield(expModes,'zerosDofs')
         expModes.zerosDofs = [];
     end
-
+    
     for i = 1:length(expModes.zerosDofs)
         for j = 1:length(expModes.zerosDofs{i})
-                expModes.zerosDofs{i}(j) =  find(orderIndex == expModes.zerosDofs{i}(j));
+            expModes.zerosDofs{i}(j) =  find(orderIndex == expModes.zerosDofs{i}(j));
         end
     end
 end
 
 
-for i = 1 : n_alpha
-    structModel.K_j{i} = structModel.K_j{i}(orderIndex, orderIndex);
-end
-for i = 1 : n_beta
-    structModel.M_j{i} = structModel.M_j{i}(orderIndex, orderIndex);
-end
-
-if( updatingOpts.formID < 2.3 || updatingOpts.formID == 3.0)
+if( updatingOpts.formID < 2.3 || updatingOpts.formID == 3.0) && ~( updatingOpts.formID == 1.4)
     % Normalize mode shape vector so that the maximum entry magnitude = 1.
     % The entry index is denoted as q(i).
     for i = 1 : expModes.n_modes
@@ -319,6 +306,8 @@ else
     end
 end
 
+
+
 if( (updatingOpts.formID >= 2 && updatingOpts.formID < 3) || updatingOpts.formID >= 5)
     if(size(expModes.psiWeights,1) <  expModes.n_meas)
         psiWeights = expModes.psiWeights';
@@ -327,7 +316,6 @@ if( (updatingOpts.formID >= 2 && updatingOpts.formID < 3) || updatingOpts.formID
             expModes.psiWeights(i,:) =  psiWeights;
         end
     end
-    
 end
 % Accommodate different variable names in different MATLAB versions.
 vers_temp = version( '-release' );

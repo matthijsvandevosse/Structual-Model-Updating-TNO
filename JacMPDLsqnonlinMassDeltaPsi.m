@@ -129,7 +129,7 @@ end
 % The 3rd dimension corresponds to i in Psi_i^m -- the mode index
 dPsi_m = zeros(n_meas, n_alpha + n_beta, n_modes);
 dPsi_m2 = zeros(n_meas, n_alpha + n_beta, n_modes);
-dPsi_m3 = zeros(n_meas, n_alpha + n_beta, n_modes);
+dPsi_m1 = zeros(n_meas, n_alpha + n_beta, n_modes);
 
 for i = 1 : n_modes
     dPsi_dAlpha_j = zeros(N, 1);
@@ -160,15 +160,15 @@ for i = 1 : n_modes
 
             % Largest mode shape DOF is always normalized to 1, so no
             % change. 
-            dPsi_m(expModes.qm(i), j, i) = 0;
+%             dPsi_m(expModes.qm(i), j, i) = 0;
 
         end
         for j = 1 : n_beta
             b = dLambda(i,j+n_alpha) * structModel.M * simModes.psi(:, i) +...
                 simModes.lambda(i) * structModel.M_j{j} * simModes.psi(:, i);
-            b = sparse(b(P_i));
+            b = sparse(b);
 
-            dPsi_dAlpha_j(P_i) = dcompB \ b;
+            dPsi_dAlpha_j = dcompB \ b;
   
             dPsi_m1(:, j+n_alpha, i) = full(dPsi_dAlpha_j(expModes.measDOFs(:,1)));
 
@@ -178,7 +178,7 @@ for i = 1 : n_modes
 
 
             % The q_i-th entry of dPsi_m remains as 0 
-            dPsi_m(expModes.qm(i), j, i) = 0;
+%             dPsi_m(expModes.qm(i), j, i) = 0;
 
         end
 

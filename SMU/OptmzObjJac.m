@@ -131,13 +131,16 @@ if ( updatingOpts.formID ~= 3 )
     % formulation does not require solving eigs.
 
     %% poles
-    [psi, lambda] = eigs(structModel.K, structModel.M, 10,1e3);
-    [lambda, ind] = sort( diag(lambda), 'ascend' );
-    psi = psi(:, ind);
+    matchedModeIndex = updatingOpts.simModesForExpMatch;
+    
+    x
+    
+    [psi, lambda] = eigs(structModel.K,  structModel.M, max(matchedModeIndex),  (160*2*pi)^2, 'IsSymmetricDefinite', 1);
+    lambda = diag(lambda);
+    sqrt(lambda)/2/pi
+    
     % psi_m: entries in simulated mode shape psi that correspond to the
     % instrumented/measured DOFs.
-    
-    matchedModeIndex = updatingOpts.simModesForExpMatch;
     
     psi_m1 = psi(expModes.measDOFs(:,1), matchedModeIndex);
 
@@ -153,6 +156,7 @@ if ( updatingOpts.formID ~= 3 )
     simModes.psi = psi(:, matchedModeIndex);
     simModes.lambda = lambda(matchedModeIndex);
 
+    
     
 
     if( updatingOpts.formID < 2.3)

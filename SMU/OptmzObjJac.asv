@@ -131,64 +131,35 @@ if ( updatingOpts.formID ~= 3 )
     % formulation does not require solving eigs.
 
     %% poles
-    [psi, lambda] = eigs(structModel.K, structModel.M, 10,1e3);
-    [lambda, ind] = sort( diag(lambda), 'ascend' );
-    psi = psi(:, ind);
+    matchedModeIndex = updatingOpts.simModesForExpMatch;
+    
+    x
+    
+    [psi, lambda] = eigs(structModel.K,  structModel.M, max(matchedModeIndex),  (160*2*pi)^2, 'IsSymmetricDefinite', 1);
+    lambda = diag(lambda);
+    sqrt(lambda)/2/pi
+    
     % psi_m: entries in simulated mode shape psi that correspond to the
     % instrumented/measured DOFs.
     
-    
-    psi_m1 = psi(expModes.measDOFs(:,2), :);
-    psi_m2 = zeros(length(expModes.measDOFs(:,2)),expModes.n_meas)
-    psi_m2(nonzeros(expModes.measDOFs(:,2))) = psi(expModes.measDOFs(:,2),:);
+    psi_m1 = psi(expModes.measDOFs(:,1), matchedModeIndex);
+
+    % Second mode shape used for relative mode shape updating
+    psi_m2 = zeros(length(expModes.measDOFs(:,2)),expModes.n_modes);
+    psi_m2(any(expModes.measDOFs(:,2),2),:) = psi(nonzeros(expModes.measDOFs(:,2)),matchedModeIndex);
 
 
-    if ( updatingOpts.modeMatch == 1 )
-        psiTemp = psi_m;
-        matchedModeIndex = zeros(expModes.n_modes, 1);
-        for i = 1 : expModes.n_modes
-            [~, matchedModeIndex(i)] = max( MAC(expModes.psiExp(:, i), psiTemp) );
-            % Wipe out the matched mode so that it is not again compared
-            % with next experimental mode.
-            psiTemp(:, matchedModeIndex(i)) = zeros(expModes.n_meas, 1);
-        end
-    elseif ( updatingOpts.modeMatch == 2 )
-        matchedModeIndex = updatingOpts.simModesForExpMatch;
-    else
-        error ('\nWrong option for variable updatingOpts.modeMatch (1 or 2).');
-    end
+    simModes.psi_m1 = psi_m1;
+    simModes.psi_m2 = psi_m2;
+    simModes.psi_m =  psi_m1-psi_m2;
 
-    simModes.psi_m = psi_m(:, matchedModeIndex);
     simModes.psi = psi(:, matchedModeIndex);
     simModes.lambda = lambda(matchedModeIndex);
-    for d = 1:size(expModes.DeltapsiExp,1)
-        simModes.delta_psi_m{d} = psi(expModes.measDeltaDofs(d,:), matchedModeIndex);
-    end
-    %% Zeros
-    if updatingOpts.formID == 1.9
-        for zero_i = 1:length(expModes.zerosDofs)
-            Mtemp = structModel.M;
-            Ktemp = structModel.K;
 
-            Mtemp(expModes.zerosDofs{zero_i}(1),:) = [];
-            Mtemp(:,expModes.zerosDofs{zero_i}(2)) = [];
-            Ktemp(expModes.zerosDofs{zero_i}(1),:) = [];
-            Ktemp(:,expModes.zerosDofs{zero_i}(2)) = [];
+    
+    
 
-            [psi_z, lambda_zero] = eigs(Ktemp, Mtemp, 10,1);
-            [lambda_zero, ind] = sort( diag(lambda_zero), 'ascend' );
-            psi_z = psi_z(:, ind);
-            simModes.psi_z{zero_i} = psi_z(:,expModes.modeIndexZeros{zero_i});
-            simModes.lambdaZeros{zero_i} = lambda_zero(expModes.modeIndexZeros{zero_i});
-            sqrt(lambda_zero(expModes.modeIndexZeros{zero_i}))
-            
-            for i = 1:length(expModes.modeIndexZeros{zero_i})
-                simModes.psi_z{zero_i}(:,i) = simModes.psi_z{zero_i}(:,i) / simModes.psi_z{zero_i}(expModes.q(i), i);
-            end
-        end
-    end
-     x
-    if( updatingOpts.formID < 2.3)
+    if( updatingOpts.formID < 2.3) && ~( updatingOpts.formID == 1.4)
         % Normalize mode shape vector so that the maximum entry magnitude = 1.
         % The entry index is denoted as q(i).
         for i = 1 : expModes.n_modes
