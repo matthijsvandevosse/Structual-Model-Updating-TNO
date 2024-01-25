@@ -152,7 +152,7 @@ optmzSolvOutput = updtResults.output;
     
 %%
 x_2 = x(1:n_alpha)
-x_2(2) = abs(x_2(2))
+% x_2(2) = abs(x_2(2))
 
 Ksolved = (structModel.K0);
 for n = 1:n_alpha

@@ -15,6 +15,8 @@ load('INFO_sensors_actuators.mat')
 
 
 
+Kdiff(2) = [];
+
 %%
 
 N = size(Kinit,1);

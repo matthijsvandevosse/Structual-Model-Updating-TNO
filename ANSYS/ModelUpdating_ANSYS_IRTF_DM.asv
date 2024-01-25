@@ -1,4 +1,5 @@
 clc;clear all; close all
+
 % close all
 warning('off')
 
@@ -11,6 +12,10 @@ Retrieve_K_M_Ansys_IRTF_DM
 
 load('IRTF_DM_K_M_Matrices.mat')
 load('INFO_sensors_actuators.mat')
+
+
+
+Kdiff(2) = [];
 
 %%
 
@@ -34,7 +39,7 @@ freqExp
 measDOFs = node_mapping.z(output_nodes(idx));
 psi_m = psiExpAll;
 
-for i = 1:length(modeIndex)
+for i = modeIndex
     [~, index] = max(abs(Psi_solved(measDOFs(1:4),i)));
     Psi_solved(:,i) = sign(dot(Psi_solved(measDOFs,i), psi_m(:,i)))* Psi_solved(:,i) / abs(Psi_solved(measDOFs(index),i));
 

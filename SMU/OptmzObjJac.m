@@ -158,10 +158,30 @@ if ( updatingOpts.formID ~= 3 )
     simModes.psi = psi(:, matchedModeIndex);
     simModes.lambda = lambda(matchedModeIndex);
 
-    
-    
+    %%
+    clf(figure(6))
+    clf(figure(5))
+    figure(6)
+    displaymode = 2;
+    x = expModes.Actuator_pos(:,1);
+    y = expModes.Actuator_pos(:,2);
+    T = delaunay(x,y);
+    T = unique(T,'rows');
+    trisurf(T, x, y, -simModes.psi_m2(:, displaymode))
+    hold on
+    xlabel("X")
+    ylabel("Y")
+    title(['Simulated mode at ' num2str(sqrt(simModes.lambda(displaymode))/2/pi) 'hz' ])
+    figure(5)
+    trisurf(T, x, y, -expModes.psiExp(:, displaymode))
+    hold on
+    xlabel("X")
+    ylabel("Y")
+    title(['Measured mode at ' num2str(sqrt(expModes.lambda(displaymode))/2/pi) 'hz' ])
 
-    if( updatingOpts.formID < 2.3) && ~( updatingOpts.formID == 1.4)
+
+    %%
+    if( updatingOpts.formID < 2.3) %&& ~( updatingOpts.formID == 1.4)
         % Normalize mode shape vector so that the maximum entry magnitude = 1.
         % The entry index is denoted as q(i).
         for i = 1 : expModes.n_modes
@@ -185,6 +205,8 @@ if nargout > 1
     jac = ModelUpdatingJacobian(x, structModel, expModes, simModes, updatingOpts);
     jac = sparse(jac);
 end
+
+test = 1;
 
 % fmincon use scalar as objective function output
 if(strcmp(optToolBox,'fmincon'))

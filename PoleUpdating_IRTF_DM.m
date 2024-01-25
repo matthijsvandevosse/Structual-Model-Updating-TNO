@@ -74,6 +74,7 @@ expModes.psiWeights = expModes.psiWeights(1:n_modes);
 
 expModes.resWeights = ones(n_modes,1);
 
+expModes.Actuator_pos = Actuator_pos(:,1:2);
 
 
 %% Model updating parameter
