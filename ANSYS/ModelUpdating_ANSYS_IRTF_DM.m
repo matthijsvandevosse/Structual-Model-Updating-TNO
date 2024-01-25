@@ -1,4 +1,5 @@
 clc;clear all; close all
+
 % close all
 warning('off')
 
@@ -11,6 +12,8 @@ Retrieve_K_M_Ansys_IRTF_DM
 
 load('IRTF_DM_K_M_Matrices.mat')
 load('INFO_sensors_actuators.mat')
+
+
 
 %%
 

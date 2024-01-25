@@ -144,6 +144,9 @@ if load_matrices
 end
 
 return
+ModalForm_IRTF
+
+return
 %% Find resonant frequencies and modeshapes
 nModes =28;
 Mode_hz = [526; 1398.7; 1420.8; 1476.8; 1592.6]; %hz
@@ -167,11 +170,11 @@ omega_hz = real(sqrt(lambdasolved)/2/pi)
 
 %%
 close all
-displaymode = 18;
+displaymode = 24;
 
 clear x y
 
-omega_hz(displaymode)
+% omega_hz(displaymode)
 figure
 for i = 1:length(output_nodes)
     x(i) = coord(( output_nodes(i)),1);
@@ -185,9 +188,9 @@ trisurf(T, x, y, -Psi_solved(node_mapping.z(output_nodes), displaymode))
 hold on
 xlabel("X")
 ylabel("Y")
-title(['mode at ' num2str(omega_hz(displaymode)) 'hz' ])
+% title(['mode at ' num2str(omega_hz(displaymode)) 'hz' ])
 
-
+%%
 
 clear x y
 
@@ -199,15 +202,27 @@ for i = 1:length(input_nodes_back)
 end
 plot(x,y,'*')
 
+%%
 T = delaunay(x,y);
 T = unique(T,'rows')
 trisurf(T, x, y, -Psi_solved(node_mapping.z(input_nodes_top), displaymode) + -Psi_solved(node_mapping.z(input_nodes_back), displaymode))
 hold on
 xlabel("X")
 ylabel("Y")
-title(['mode at ' num2str(omega_hz(displaymode)) 'hz' ])
+% title(['mode at ' num2str(omega_hz(displaymode)) 'hz' ])
 
-
+%%
+displaymode = 4;
+x = Actuator_pos(:,1);
+y = Actuator_pos(:,2);
+T = delaunay(x,y);
+T = unique(T,'rows');
+trisurf(T, x, y, -simModes.psi_m(:, displaymode))
+hold on
+xlabel("X")
+ylabel("Y")
+title(['mode at ' num2str(sqrt(simModes.lambda(displaymode))/2/pi) 'hz' ])
+%%
 
 clear x y
 

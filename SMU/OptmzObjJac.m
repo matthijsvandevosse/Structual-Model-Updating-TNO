@@ -135,10 +135,12 @@ if ( updatingOpts.formID ~= 3 )
     
     x
     
-    [psi, lambda] = eigs(structModel.K,  structModel.M, max(matchedModeIndex),  (1*2*pi)^2, 'IsSymmetricDefinite', 1);
+    [psi, lambda] = eigs(structModel.K,  structModel.M, max(matchedModeIndex),  (160*2*pi)^2, 'IsSymmetricDefinite', 1);
     lambda = diag(lambda);
     sqrt(lambda)/2/pi
     
+
+
     % psi_m: entries in simulated mode shape psi that correspond to the
     % instrumented/measured DOFs.
     

@@ -1,7 +1,7 @@
 %% Load Sensitivity matrix
 
 modeIndex = [8; 16; 18; 21; 28]; % Indexes of these measured modes
-% modeIndex = 8;
+modeIndex = [8; 16; 18; 28]; % Indexes of these measured modes
 n_modes = length(modeIndex); % Number of measured modes
 %% Assemble structure matrices
 
