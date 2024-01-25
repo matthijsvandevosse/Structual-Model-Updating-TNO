@@ -286,25 +286,7 @@ if updatingOpts.formID == 1.9
 end
 
 
-if( updatingOpts.formID < 2.3 || updatingOpts.formID == 3.0) %&& ~(updatingOpts.formID == 1.4)
-    % Normalize mode shape vector so that the maximum entry magnitude = 1.
-    % The entry index is denoted as q(i).
-    for i = 1 : expModes.n_modes
-        if(~isempty(find(expModes.psiExp(:,i) == 1, 1)))
-            expModes.qm(i) = find(expModes.psiExp(:,i) == 1);
-            expModes.q(i) = expModes.measDOFs(expModes.qm(i));
-        else
-            [~, expModes.qm(i)] = max( abs( expModes.psiExp(:,i) ) );
-            expModes.q(i) = expModes.measDOFs(expModes.qm(i));
-            expModes.psiExp(:,i) = expModes.psiExp(:,i) / expModes.psiExp(expModes.qm(i), i);
-        end
-    end
-else
-    % Normalize mode shape vector so that the length = 1.
-    for i = 1 : expModes.n_modes
-        expModes.psiExp(:,i) = expModes.psiExp(:,i) / norm(expModes.psiExp(:,i));
-    end
-end
+
 
 if( (updatingOpts.formID >= 2 && updatingOpts.formID < 3) || updatingOpts.formID >= 5)
     if(size(expModes.psiWeights,1) <  expModes.n_meas)

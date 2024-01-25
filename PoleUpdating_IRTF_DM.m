@@ -1,13 +1,14 @@
 %% Load Sensitivity matrix
 
 modeIndex = [8; 16; 18; 21; 28]; % Indexes of these measured modes
-modeIndex = [8; 16; 18; 28]; % Indexes of these measured modes
+modeIndex = [8; 16; 18; 21; 28]; % Indexes of these measured modes
 n_modes = length(modeIndex); % Number of measured modes
 %% Assemble structure matrices
 
 structModel.M0 = sparse(Minit);
 structModel.K0 = sparse(Kinit);
 structModel.M_j = Mdiff;
+structModel.M_j = [];
 structModel.K_j = Kdiff;
 
 
@@ -36,19 +37,13 @@ load("G_ss_Modal_fitted_4.mat")
 lambdaExp = diag(-G_ss_Modal.A(size(G_ss_Modal.A)/2+1:end,1:size(G_ss_Modal.A)/2));
 freqExp =sqrt(lambdaExp)/2/pi;
 
+%conversion to rad/sec
+lambdaExp = (freqExp*2*pi*2*pi).^2
+
 L = G_ss_Modal.C(:,1:size(G_ss_Modal.A)/2);
 R = G_ss_Modal.B(size(G_ss_Modal.B)/2+1:end,:);
 
 %%
-
-
-
-for i = 1:n_modes
-    m = median(abs(L(:,i)));
-    L(:,i) = L(:,i) / m;
-    [m] = median(abs(R(:,i)));
-    R(:,i) = R(:,i) / m;
-end
 
 psi_m = R';
 
@@ -64,12 +59,12 @@ num_unmeasDOFs = length(unmeasDOFs);
 
 
 
-expModes.lambdaWeights = [10 1 1 1 1 1];
+expModes.lambdaWeights = [1 1 1 0 1];
 expModes.lambdaWeights = expModes.lambdaWeights(1:n_modes);
 
 expModes.psiWeights = ones(n_modes,1);
 
-expModes.psiWeights = [1 1 1 1 1 1];
+expModes.psiWeights = [1 1 1 0 1 ];
 expModes.psiWeights = expModes.psiWeights(1:n_modes);
 
 expModes.resWeights = ones(n_modes,1);
