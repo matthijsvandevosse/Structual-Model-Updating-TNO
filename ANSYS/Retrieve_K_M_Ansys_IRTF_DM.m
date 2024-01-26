@@ -133,11 +133,7 @@ if load_matrices
             Minit = Mass_cleaned;
         else
             if any(any(Stiff_cleaned - Kinit))
-                if length(nonzeros(Stiff_cleaned - Kinit)) < 0.5*length(nonzeros(Kinit))
-                    Kdiff{length(Kdiff)+1} = Stiff_cleaned - Kinit;
-                else
-                    warning("Kdiff has to many changing nodes, meshing probably is not identical")
-                end
+                Kdiff{length(Kdiff)+1} = Stiff_cleaned - Kinit;
             end
             
             if retreive_mass
@@ -145,7 +141,11 @@ if load_matrices
             end
         end
     end
+    save((["IRTF_DM_K_M_Matrices_" + date + ".mat"]), "Kdiff", "Kinit", "Mdiff", "Minit", "node_mapping" )
+
 end
+
+
 
 return
 ModalForm_IRTF

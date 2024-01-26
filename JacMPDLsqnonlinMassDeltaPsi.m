@@ -146,7 +146,7 @@ for i = 1 : n_modes
         dcompB = decomposition(B);
 
         for j = 1 : n_alpha
-            b = dLambda(i,j) * structModel.M * simModes.psi(:, i) -...
+            b = dLambda(i,j ) * structModel.M * simModes.psi(:, i) -...
                 structModel.K_j{j} * simModes.psi(:, i);
             b = sparse(b);
             

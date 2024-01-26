@@ -104,7 +104,7 @@ n_x = length(updatingOpts.x_lb);
 optimzOpts.x0 = zeros(n_x, 1);
 
 % random initialization
-optimzOpts.x0 = 0.1*rand(n_x, 1);
+optimzOpts.x0 = 0.05*rand(n_x, 1);
 
 
 updtResults = StructModelUpdating(structModel, expModes, updatingOpts, optimzOpts);

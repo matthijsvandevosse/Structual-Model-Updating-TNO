@@ -10,7 +10,8 @@ load_matrices = 0;
 
 Retrieve_K_M_Ansys_IRTF_DM
 
-load('IRTF_DM_K_M_Matrices.mat')
+% load('IRTF_DM_K_M_Matrices.mat')
+load('IRTF_DM_K_M_Matrices_26-Jan-2024.mat')
 load('INFO_sensors_actuators.mat')
 
 
