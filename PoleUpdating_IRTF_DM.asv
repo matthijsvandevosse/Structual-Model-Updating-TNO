@@ -1,7 +1,7 @@
 %% Load Sensitivity matrix
 
 modeIndex = [8; 16; 18; 21; 28]; % Indexes of these measured modes
-modeIndex = [8; 16; 18; 28]; % Indexes of these measured modes
+modeIndex = [8; 16; 18; 21; 28]; % Indexes of these measured modes
 n_modes = length(modeIndex); % Number of measured modes
 %% Assemble structure matrices
 
@@ -59,12 +59,12 @@ num_unmeasDOFs = length(unmeasDOFs);
 
 
 
-expModes.lambdaWeights = [10 1 1 1 1 1];
+expModes.lambdaWeights = [1 1 1 0 1];
 expModes.lambdaWeights = expModes.lambdaWeights(1:n_modes);
 
 expModes.psiWeights = ones(n_modes,1);
 
-expModes.psiWeights = [1 1 1 1 1 1];
+expModes.psiWeights = [1 1 1 0 1 ];
 expModes.psiWeights = expModes.psiWeights(1:n_modes);
 
 expModes.resWeights = ones(n_modes,1);
@@ -99,7 +99,12 @@ filename = ['TEST' num2str(updatingOpts.formID) '_JAC' optimzOpts.gradSel '_' op
 
 
 n_x = length(updatingOpts.x_lb);
+
+% zero initialization
 optimzOpts.x0 = zeros(n_x, 1);
+
+% random initialization
+optimzOpts.x0 = 0.1*rand(n_x, 1);
 
 
 updtResults = StructModelUpdating(structModel, expModes, updatingOpts, optimzOpts);

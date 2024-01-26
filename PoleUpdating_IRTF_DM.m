@@ -99,7 +99,12 @@ filename = ['TEST' num2str(updatingOpts.formID) '_JAC' optimzOpts.gradSel '_' op
 
 
 n_x = length(updatingOpts.x_lb);
+
+% zero initialization
 optimzOpts.x0 = zeros(n_x, 1);
+
+% random initialization
+optimzOpts.x0 = 0.1*rand(n_x, 1);
 
 
 updtResults = StructModelUpdating(structModel, expModes, updatingOpts, optimzOpts);

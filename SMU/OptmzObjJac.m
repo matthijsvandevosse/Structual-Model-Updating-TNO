@@ -133,8 +133,8 @@ if ( updatingOpts.formID ~= 3 )
     %% poles
     matchedModeIndex = updatingOpts.simModesForExpMatch;
 
-    
-    [psi, lambda] = eigs(structModel.K,  structModel.M, max(matchedModeIndex),  (160*2*pi)^2, 'IsSymmetricDefinite', 1);
+
+    [psi, lambda] = eigs(structModel.K,  structModel.M, max(matchedModeIndex),  (1*2*pi)^2, 'IsSymmetricDefinite', 1);
     lambda = diag(lambda);
 
 
@@ -156,7 +156,7 @@ if ( updatingOpts.formID ~= 3 )
 
     simModes.psi = psi(:, matchedModeIndex);
     simModes.lambda = lambda(matchedModeIndex);
-    
+
     x
     sim_mode_hz = sqrt(simModes.lambda')/2/pi
     exp_mode_hz = sqrt(expModes.lambdaExp')/2/pi
@@ -178,27 +178,29 @@ if ( updatingOpts.formID ~= 3 )
         end
     end
 
-   %%
-    clf(figure(6))
-    clf(figure(5))
-    figure(6)
-    displaymode = 2;
-    x = expModes.Actuator_pos(:,1);
-    y = expModes.Actuator_pos(:,2);
-    T = delaunay(x,y);
-    T = unique(T,'rows');
-    trisurf(T, x, y, simModes.psi_m(:, displaymode))
-    hold on
-    xlabel("X")
-    ylabel("Y")
-    title(['Simulated mode at ' num2str(sqrt(simModes.lambda(displaymode))/2/pi) 'hz' ])
-    figure(5)
-    trisurf(T, x, y, expModes.psiExp(:, displaymode))
-    hold on
-    xlabel("X")
-    ylabel("Y")
-    title(['Measured mode at ' num2str(sqrt(expModes.lambdaExp(displaymode))/2/pi) 'hz' ])
-    drawnow
+    %%
+    if isfield(expModes,'Actuator_pos')
+        clf(figure(6))
+        clf(figure(5))
+        figure(6)
+        displaymode = 2;
+        x = expModes.Actuator_pos(:,1);
+        y = expModes.Actuator_pos(:,2);
+        T = delaunay(x,y);
+        T = unique(T,'rows');
+        trisurf(T, x, y, simModes.psi_m(:, displaymode))
+        hold on
+        xlabel("X")
+        ylabel("Y")
+        title(['Simulated mode at ' num2str(sqrt(simModes.lambda(displaymode))/2/pi) 'hz' ])
+        figure(5)
+        trisurf(T, x, y, expModes.psiExp(:, displaymode))
+        hold on
+        xlabel("X")
+        ylabel("Y")
+        title(['Measured mode at ' num2str(sqrt(expModes.lambdaExp(displaymode))/2/pi) 'hz' ])
+        drawnow
+    end
 end
 
 

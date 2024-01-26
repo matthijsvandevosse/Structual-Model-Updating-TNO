@@ -133,11 +133,10 @@ if ( updatingOpts.formID ~= 3 )
     %% poles
     matchedModeIndex = updatingOpts.simModesForExpMatch;
 
-    x
-
+    
     [psi, lambda] = eigs(structModel.K,  structModel.M, max(matchedModeIndex),  (160*2*pi)^2, 'IsSymmetricDefinite', 1);
     lambda = diag(lambda);
-    sqrt(lambda)/2/pi
+
 
 
 
@@ -157,8 +156,10 @@ if ( updatingOpts.formID ~= 3 )
 
     simModes.psi = psi(:, matchedModeIndex);
     simModes.lambda = lambda(matchedModeIndex);
-
- 
+    
+    x
+    sim_mode_hz = sqrt(simModes.lambda')/2/pi
+    exp_mode_hz = sqrt(expModes.lambdaExp')/2/pi
     %%
     if( updatingOpts.formID < 2.3 || updatingOpts.formID == 3.0) %&& ~(updatingOpts.formID == 1.4)
         % Normalize mode shape vector so that the maximum entry magnitude = 1.
@@ -178,6 +179,7 @@ if ( updatingOpts.formID ~= 3 )
     end
 
    %%
+   if exist(expModes.Actuator_pos)
     clf(figure(6))
     clf(figure(5))
     figure(6)
@@ -197,11 +199,11 @@ if ( updatingOpts.formID ~= 3 )
     xlabel("X")
     ylabel("Y")
     title(['Measured mode at ' num2str(sqrt(expModes.lambdaExp(displaymode))/2/pi) 'hz' ])
-
-
-
-
+    drawnow
 end
+
+
+
 
 r =  ModelUpdatingObjective(x, structModel, expModes, simModes, updatingOpts);
 r = sparse(r);

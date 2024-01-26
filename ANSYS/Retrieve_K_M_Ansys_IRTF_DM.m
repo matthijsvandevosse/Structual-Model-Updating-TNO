@@ -78,7 +78,7 @@ Mdiff = [];
 if load_matrices
     for ii = 1:length(FILES)
         % Only retreive Mass matrix first time
-        if ii ==1 || ii == 3
+        if ii ==1 || ii == 8
             retreive_mass = 1;
         else
             retreive_mass = 0;
@@ -133,7 +133,11 @@ if load_matrices
             Minit = Mass_cleaned;
         else
             if any(any(Stiff_cleaned - Kinit))
-                Kdiff{length(Kdiff)+1} = Stiff_cleaned - Kinit;
+                if length(nonzeros(Stiff_cleaned - Kinit)) < 0.5*length(nonzeros(Kinit))
+                    Kdiff{length(Kdiff)+1} = Stiff_cleaned - Kinit;
+                else
+                    warning("Kdiff has to many changing nodes, meshing probably is not identical")
+                end
             end
             
             if retreive_mass

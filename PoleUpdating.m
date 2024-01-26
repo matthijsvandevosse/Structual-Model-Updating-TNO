@@ -1,6 +1,6 @@
 %% Load Sensitivity matrix
 
-modeIndex = [1 2 3 4]; % Indexes of these measured modes
+modeIndex = [1 2 3 4 5 6]; % Indexes of these measured modes
 n_modes = length(modeIndex); % Number of measured modes
 %% Assemble structure matrices
 
@@ -144,6 +144,9 @@ filename = ['TEST' num2str(updatingOpts.formID) '_JAC' optimzOpts.gradSel '_' op
 n_x = length(updatingOpts.x_lb);
 optimzOpts.x0 = zeros(n_x, 1);
 
+optimzOpts.x0 = 0.1*rand(n_x, 1);
+
+
 
 updtResults = StructModelUpdating(structModel, expModes, updatingOpts, optimzOpts);
 x = updtResults.xOpt;
@@ -152,7 +155,7 @@ optmzSolvOutput = updtResults.output;
     
 %%
 x_2 = x(1:n_alpha)
-% x_2(2) = abs(x_2(2))
+
 
 Ksolved = (structModel.K0);
 for n = 1:n_alpha

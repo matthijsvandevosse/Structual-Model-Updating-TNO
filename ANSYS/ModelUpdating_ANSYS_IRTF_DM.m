@@ -14,9 +14,6 @@ load('IRTF_DM_K_M_Matrices.mat')
 load('INFO_sensors_actuators.mat')
 
 
-
-Kdiff(2) = [];
-
 %%
 
 N = size(Kinit,1);
