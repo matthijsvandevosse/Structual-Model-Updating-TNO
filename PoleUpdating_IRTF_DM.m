@@ -8,7 +8,7 @@ n_modes = length(modeIndex); % Number of measured modes
 structModel.M0 = sparse(Minit);
 structModel.K0 = sparse(Kinit);
 structModel.M_j = Mdiff;
-structModel.M_j = [];
+% structModel.M_j = [];
 structModel.K_j = Kdiff;
 
 
@@ -114,18 +114,19 @@ fval = updtResults.fvalOpt;
 optmzSolvOutput = updtResults.output;
     
 %%
+
 x_k = (x(1:n_alpha))
 % x_m = x(n_alpha+1,end)
 %%
 structModel.K = structModel.K0;
-for i = 1 : n_alpha
+for i = 1 : length(alpha_act)
     structModel.K = structModel.K + x(i) * structModel.K_j{i};
 end
 
 structModel.M = structModel.M0;
-% for i = 1 : n_beta
-%     structModel.M = structModel.M + x(i + n_alpha) * structModel.M_j{i};
-% end
+for i = 1 : length(structModel.M_j)
+    structModel.M = structModel.M + x(i + length(alpha_act)) * structModel.M_j{i};
+end
 
 
 [psi_solved, lambda_solved] = eigs(structModel.K,  structModel.M, max(modeIndex),  (160*2*pi)^2, 'IsSymmetricDefinite', 1);
