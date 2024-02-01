@@ -52,26 +52,15 @@ for i = 1 : n_modes
     expModes.q(i) = expModes.measDOFs(expModes.qm(i));
     expModes.psiExp(:,i) = expModes.psiExp(:,i) / expModes.psiExp(expModes.qm(i), i);
     psi_m_solved(:,i) = psi_m_solved(:,i) /psi_m_solved(expModes.qm(i), i);
-    psi_solved(:,modeIndex(i)) = psi_solved(:,modeIndex(i)) / psi_solved(expModes.qm(i), modeIndex(i));
+    psi_solved(:,modeIndex(i)) = psi_solved(:,modeIndex(i)) / psi_solved(expModes.qm(i), i);
 end
 
 %%
 for i = 1:n_modes
-    MACi_updated(i) = MAC(expModes.psiExp(:,i), psi_m_solved(:,i));
-    MACi_init(i) = MAC(expModes.psiExp(:,i), psi_m_o(:,i));
+    MACi_updated = MAC(expModes.psiExp(:,i), psi_m_solved);
+    MACi_init = MAC(expModes.psiExp(:,i), psi_m_o);
 end
 
-%%
-
-freq_solved = sqrt(diag(lambda_solved))/2/pi;
-
-freq_o = sqrt(diag(lambda_o))/2/pi;
-
-
-
-freq_m =  sqrt(expModes.lambdaExp')/2/pi
-freq_o = round(freq_o(modeIndex)')
-freq_solved = round(freq_solved(modeIndex)')
 %%
 % load('x_solved_v1.mat')
 plot_modeshapes_IRTF

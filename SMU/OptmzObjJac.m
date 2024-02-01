@@ -132,9 +132,12 @@ if ( updatingOpts.formID ~= 3 )
 
     %% poles
     matchedModeIndex = updatingOpts.simModesForExpMatch;
+    
+    tic
 
-
-    [psi, lambda] = eigs(structModel.K,  structModel.M, max(matchedModeIndex),  (160*2*pi)^2, 'IsSymmetricDefinite', 1);
+    [psi, lambda] = eigs(structModel.K,  structModel.M, max(matchedModeIndex),  (150*2*pi)^2, 'IsSymmetricDefinite', 1, 'Tolerance', 1e-3);
+    
+    toc
     lambda = diag(lambda);
 
 
@@ -169,6 +172,8 @@ if ( updatingOpts.formID ~= 3 )
             expModes.q(i) = expModes.measDOFs(expModes.qm(i));
             expModes.psiExp(:,i) = expModes.psiExp(:,i) / expModes.psiExp(expModes.qm(i), i);
             simModes.psi_m(:,i) = simModes.psi_m(:,i) / simModes.psi_m(expModes.qm(i), i);
+            simModes.psi(:,i) = simModes.psi(:,i) / simModes.psi_m(expModes.qm(i), i);
+    
         end
     else
         % Normalize mode shape vector so that the length = 1.
