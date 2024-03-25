@@ -11,8 +11,10 @@ load_matrices = 0;
 
 Retrieve_K_M_Ansys_IRTF_DM
 
-% load('IRTF_DM_K_M_Matrices.mat')
-load('IRTF_DM_K_M_Matrices_27-Jan-2024.mat')
+load('IRTF_DM_K_M_Matrices_24-Mar-2024.mat')
+
+% load('IRTF_DM_K_M_Matrices_27-Jan-2024.mat')
+% load('IRTF_DM_K_M_Matrices_02-Feb-2024.mat')
 load('INFO_sensors_actuators.mat')
 
 
@@ -30,6 +32,22 @@ measDOFs = [ node_mapping.z(input_nodes_top) node_mapping.z(input_nodes_back) ];
 PoleUpdating_IRTF_DM
 
 %%
+%%
+structModel.K = structModel.K0;
+for i = 1 : length(alpha_act)
+    structModel.K = structModel.K + x(i) * structModel.K_j{i};
+end
+
+structModel.M = structModel.M0;
+for i = 1 : length(structModel.M_j)
+    structModel.M = structModel.M + x(i + length(alpha_act)) * structModel.M_j{i};
+end
+
+
+[psi_solved, lambda_solved] = eigs(structModel.K,  structModel.M, 35,  (160*2*pi)^2, 'IsSymmetricDefinite', 1,  'Tolerance', 1e-6);
+[psi_o, lambda_o] = eigs(structModel.K0,  structModel.M0, max(modeIndex),  (160*2*pi)^2, 'IsSymmetricDefinite', 1, 'Tolerance', 1e-6);
+
+
 naturalfrequency = sqrt(modeIndex)/(2*pi)
 naturalfrequency_0 =  sqrt(modeIndex)/(2*pi)
 freqExp
@@ -48,7 +66,7 @@ psi_m_o =  psi_m1_o-psi_m2_o;
 
 %%
 for i = 1 : n_modes
-    [~, expModes.qm(i)] = max( abs( psi_m_solved(:,i) ) );
+    [~, expModes.qm(i)] = max( abs( psi_m_solved([1:18],i) ) );
     expModes.q(i) = expModes.measDOFs(expModes.qm(i));
     expModes.psiExp(:,i) = expModes.psiExp(:,i) / expModes.psiExp(expModes.qm(i), i);
     psi_m_solved(:,i) = psi_m_solved(:,i) /psi_m_solved(expModes.qm(i), i);
@@ -67,7 +85,7 @@ freq_solved = sqrt(diag(lambda_solved))/2/pi;
 
 freq_o = sqrt(diag(lambda_o))/2/pi;
 
-
+lambda_solved = diag(lambda_solved);
 
 freq_m =  sqrt(expModes.lambdaExp')/2/pi
 freq_o = round(freq_o(modeIndex)')
@@ -80,17 +98,17 @@ pause(0.5)
 
 
 %%
-structModel.D0 = 3.45e-6*eye(N);
-gain = 800;
-% strut_damping1 = 1e3;
-% strut_damping2 = 10e4;
-strut_damping1 = 4e4;
-strut_damping2 = 20e3;
+% structModel.D0 = 3.45e-6*eye(N);
+% gain = 800;
+% % strut_damping1 = 1e3;
+% % strut_damping2 = 10e4;
+% strut_damping1 = 4e4;
+% strut_damping2 = 20e3;
+% 
+% % StateSpaceRep
 
-% StateSpaceRep
 
-
-ModalForm
+ModalForm_IRTF
 
 hp_mag = G_mag;
 hp_pha = G_pha;

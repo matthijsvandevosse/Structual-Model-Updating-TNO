@@ -1,67 +1,61 @@
 
-nModes =30;
+structModel.D0 = sparse(10e-6*eye(N));
 
 
-structModel.K = Ksolved;
+gain = 800;
 
-[Psi_solved, lambdasolved] = eigs(Ksolved, structModel.M0,nModes,1e3);
+% LeastSquaredOpt
+
+% Derived using LeastSquaredOpt (takes a long time!!)
+
+structModel.D = sparse(9e-6*eye(N));
+
+
+nModes =100;
+
+[Psi_solved, lambdasolved] = eigs(structModel.K, structModel.M0,nModes,1e3);
 
 [lambdasolved,dummyInd] = sort(diag(lambdasolved), 'ascend');
 
 Psi_solved = Psi_solved(:,dummyInd);
 
-strut_nodes1 = nodes(coord(:,1) > .25);
-strut_nodes2 = nodes(coord(:,2)<0);
-
-structModel.D0(strut_nodes1,strut_nodes1) = strut_damping1*structModel.D0(strut_nodes1,strut_nodes1);
-structModel.D0(strut_nodes2,strut_nodes2) = strut_damping2*structModel.D0(strut_nodes2,strut_nodes2);
-
 for i = 1:size(Psi_solved,2)
     m = (Psi_solved(:,i))'*full(structModel.M0)*(Psi_solved(:,i));
     Psi_solved(:,i) = Psi_solved(:,i)./sqrt(m);
-    Dm(i,i) = Psi_solved(:,i)'*structModel.D0*Psi_solved(:,i);
+    Dm(i,i) = Psi_solved(:,i)'*structModel.D*Psi_solved(:,i);
 end
 
-% Dm(1,1) = Dm(1,1)*3.25;
-% Dm(2,2) = Dm(2,2)*1.5;
+Dm_fitted = -diag(G_ss_Modal.A(9:end,9:end));
+Dm(1:length(Dm_fitted),1:length(Dm_fitted)) = diag(Dm_fitted);
+Dm(16:18,16:18) = 10;
 %%
-clear G
+clear R G
 
-for i = 1:nModes
+freq = ffrf;
 
-    Psi_squared = gain*Psi_solved(:,i)*Psi_solved(:,i)';
-
-    if i > 1
-        G = G+ Psi_squared([measDOFs(1) measDOFs(2) measDOFs(3) nonmeasDOFs(1) measDOFs(4)],actDOFs)* tf(1, [1 Dm(i,i) lambdasolved(i)]);
-    else
-          G = Psi_squared([measDOFs(1) measDOFs(2) measDOFs(3) nonmeasDOFs(1) measDOFs(4)],actDOFs)* tf(1, [1 Dm(i,i) lambdasolved(i)]);
-    end
-end
-
-w = logspace(0,4,800);
-%%%
-[G_mag,G_pha, w] = bode(G, w);
-
-%%
-for loop = 1:5
-for i = 1:5
-    for j = 1:3
-        if G_pha(i,j,1) > 200
-            G_pha(i,j,:) = G_pha(i,j,:) - 360;
+for ii = 1:length(freq)
+    w = freq(ii);
+    for m = 1:nModes%length(lambda)
+        R(:,:,m) = Psi_solved([measDOFs(1) measDOFs(2) measDOFs(3) nonmeasDOFs(1) measDOFs(4)],m)*Psi_solved(actDOFs,m)';
+        if m == 1
+            G(:,:,ii) = gain* R(:,:,m)./( -w^2 + 1i*Dm(m,m)*w + lambdasolved(m) );
+        else
+            G(:,:,ii) = G(:,:,ii) + gain* R(:,:,m)./( -w^2 + 1i*Dm(m,m)*w + lambdasolved(m) );  
         end
     end
 end
-end
+
+
+G_mag = (abs(G));
+    
+G_pha = angle(G);
+
 
 %% Initial model
-nModes =30;
 
+[Psi_solved, lambdainit] = eigs(structModel.K0, structModel.M0,nModes,1e3);
 
-
-
-[Psi_solved, lambdasolved] = eigs(structModel.K0, structModel.M0,nModes,1e3);
-
-[lambdasolved,dummyInd] = sort(diag(lambdasolved), 'ascend');
+[lambdainit,dummyInd] = sort(diag(lambdainit), 'ascend');
 
 Psi_solved = Psi_solved(:,dummyInd);
 
@@ -69,36 +63,26 @@ Psi_solved = Psi_solved(:,dummyInd);
 for i = 1:size(Psi_solved,2)
     m = (Psi_solved(:,i))'*full(structModel.M0)*(Psi_solved(:,i));
     Psi_solved(:,i) = Psi_solved(:,i)./sqrt(m);
-    Dm(i,i) = Psi_solved(:,i)'*structModel.D0*Psi_solved(:,i);
+    Dm(i,i) = Psi_solved(:,i)'*structModel.D*Psi_solved(:,i);
+
 end
+Dm(1:length(Dm_fitted),1:length(Dm_fitted)) = diag(Dm_fitted);
+clear R G0
 
-Dm(1,1) = Dm(1,1)*3.5;
-Dm(2,2) = Dm(2,2)*1.5;
-%%
-clear G
-
-for i = 1:nModes
-
-    Psi_squared = gain*Psi_solved(:,i)*Psi_solved(:,i)';
-
-    if i > 1
-        G = G+ Psi_squared([measDOFs(1) measDOFs(2) measDOFs(3) nonmeasDOFs(1) measDOFs(4)],actDOFs)* tf(1, [1 Dm(i,i) lambdasolved(i)]);
-    else
-          G = Psi_squared([measDOFs(1) measDOFs(2) measDOFs(3) nonmeasDOFs(1) measDOFs(4)],actDOFs)* tf(1, [1 Dm(i,i) lambdasolved(i)]);
-    end
-end
-
-w = logspace(0,4,800);
-%%%
-[G0_mag,G0_pha, ffrf] = bode(G, w);
-
-%%
-for loop = 1:5
-for i = 1:5
-    for j = 1:3
-        if G0_pha(i,j,1) > 200
-            G0_pha(i,j,:) = G0_pha(i,j,:) - 360;
+for ii = 1:length(freq)
+    w = freq(ii);
+    for m = 1:nModes%length(lambda)
+        R(:,:,m) = Psi_solved([measDOFs(1) measDOFs(2) measDOFs(3) nonmeasDOFs(1) measDOFs(4)],m)*Psi_solved(actDOFs,m)';
+        if m == 1
+            G0(:,:,ii) = gain* R(:,:,m)./( -w^2 + 1i*Dm(m,m)*w + lambdainit(m) );
+        else
+            G0(:,:,ii) = G0(:,:,ii) + gain* R(:,:,m)./( -w^2 + 1i*Dm(m,m)*w + lambdainit(m) );  
         end
     end
 end
-end
+
+
+G0_mag = (abs(G0));
+    
+G0_pha = angle(G0);
+

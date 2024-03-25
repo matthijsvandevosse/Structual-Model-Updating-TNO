@@ -49,7 +49,15 @@ for ii = 1:length(input_nodes_top_nr)
     input_nodes_top(ii) = find(input_nodes_top_nr(ii)==nodes);
 end
 
-% -4.39480e-2
+% Nodes at the sensor bracket
+filename = 'sensor_bracket.txt';
+[sensor_bracket_nr, ~] = ansysnodes(filename);
+
+% Find in which row of the matrix the nummber corresponds to
+for ii = 1:length(sensor_bracket_nr)
+    sensor_bracket(ii) = find(sensor_bracket_nr(ii)==nodes);
+end
+
 
 % Nodes number at the top of the actuators
 filename = 'Backplate_nodes.txt';
@@ -72,13 +80,22 @@ end
 input_nodes_back = input_nodes_back(act_loc_b);
 input_nodes_top = input_nodes_top(act_loc_t);
 
+for ii = Acts
+    [min_check_b(ii), sensor_nodes_top_i(ii)] = min( sum(abs(coord(sensor_bracket,1:2) - Actuator_pos(ii,1:2)),2));
+    [min_check_b(ii), sensor_nodes_bottom_i(ii)] = min( sum(abs(coord(output_nodes,1:2) - Actuator_pos(ii,1:2)),2));
+end
+
+
+sensor_nodes_top = sensor_bracket(sensor_nodes_top_i);
+sensor_nodes_bottom = output_nodes(sensor_nodes_bottom_i);
+
 Kdiff = [];
 Mdiff = [];
 %% Retrieve Stiffness and Mass matrix
 if load_matrices
     for ii = 1:length(FILES)
         % Only retreive Mass matrix first time
-        if ii ==1 || ii == 8
+        if ii ==1 || ii ==8 || ii == 7
             retreive_mass = 1;
         else
             retreive_mass = 0;
@@ -141,6 +158,7 @@ if load_matrices
             end
         end
     end
+
     save((["IRTF_DM_K_M_Matrices_" + date + ".mat"]), "Kdiff", "Kinit", "Mdiff", "Minit", "node_mapping" )
 
 end
@@ -158,12 +176,15 @@ Mode_nr = [8; 16; 18; 21; 28];
 first_mode = 150;
 
 tic
-[Psi_solved, lambdasolved] = eigs(Kinit, Minit, nModes, (first_mode*2*pi)^2, 'IsSymmetricDefinite', "Display", 0);
+[Psi_solved, lambdasolved] = eigs(Kinit, Minit, nModes, (first_mode*2*pi)^2, 'IsSymmetricDefinite', 1);
+% [Psi_solved, lambdasolved] = eigs(Stiff_cleaned, Mass_cleaned, nModes, (first_mode*2*pi)^2, 'IsSymmetricDefinite', 1, 'Tolerance',1e-4);
+
+
 % [Psi_solved, lambdasolved] = eigs(Kinit, Minit, nModes, lambdasolved(1), 'IsSymmetricDefinite', 1, 'Tolerance',1e-4, "Display", 0, "StartVector",Psi_solved(:,1));
 
 lambdasolved = diag(lambdasolved);
 toc
-omega_hz = real(sqrt(lambdasolved)/2/pi)
+omega_hz = real(sqrt(lambdasolved)/2/pi);
 
 % Kdiff{2} = 1e2*Kdiff{2};
 % %%
@@ -174,7 +195,7 @@ omega_hz = real(sqrt(lambdasolved)/2/pi)
 
 %%
 close all
-displaymode = 24;
+displaymode = 18;
 
 clear x y
 
@@ -187,8 +208,8 @@ end
 plot(x,y,'*')
 
 T = delaunay(x,y);
-T = unique(T,'rows')
-trisurf(T, x, y, -Psi_solved(node_mapping.z(output_nodes), displaymode))
+T = unique(T,'rows');
+trisurf(T, x, y, Psi_solved(node_mapping.z(output_nodes), displaymode));
 hold on
 xlabel("X")
 ylabel("Y")
@@ -208,7 +229,7 @@ plot(x,y,'*')
 
 %%
 T = delaunay(x,y);
-T = unique(T,'rows')
+T = unique(T,'rows');
 trisurf(T, x, y, -Psi_solved(node_mapping.z(input_nodes_top), displaymode) + -Psi_solved(node_mapping.z(input_nodes_back), displaymode))
 hold on
 xlabel("X")
@@ -216,32 +237,24 @@ ylabel("Y")
 % title(['mode at ' num2str(omega_hz(displaymode)) 'hz' ])
 
 %%
-displaymode = 4;
-x = Actuator_pos(:,1);
-y = Actuator_pos(:,2);
-T = delaunay(x,y);
-T = unique(T,'rows');
-trisurf(T, x, y, -simModes.psi_m(:, displaymode))
-hold on
-xlabel("X")
-ylabel("Y")
-title(['mode at ' num2str(sqrt(simModes.lambda(displaymode))/2/pi) 'hz' ])
-%%
 
 clear x y
-
-omega_hz(displaymode)
-figure
-for i = 1:length(input_nodes_back)
-    x(i) = coord(( input_nodes_back(i)),1);
-    y(i) =coord(( input_nodes_back(i)),2);
+displaymode = 8;
+figure(5)
+for i = 1:length(sensor_nodes_bottom)
+    x(i) = coord(( sensor_nodes_top(i)),1);
+    y(i) =coord(( sensor_nodes_top(i)),2);
 end
 plot(x,y,'*')
 
+%%
+clf(figure(5))
+figure(5)
 T = delaunay(x,y);
-T = unique(T,'rows')
-trisurf(T, x, y,  -Psi_solved(node_mapping.z(input_nodes_back), displaymode))
+T = unique(T,'rows');
+trisurf(T, x, y, -Psi_solved(node_mapping.z(sensor_nodes_top), displaymode) )
 hold on
 xlabel("X")
 ylabel("Y")
-title(['mode at ' num2str(omega_hz(displaymode)) 'hz' ])
+% title(['mode at ' num2str(omega_hz(displaymode)) 'hz' ])
+

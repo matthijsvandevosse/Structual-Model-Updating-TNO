@@ -1,37 +1,46 @@
-    [psi, lambda] = eigs(Kinit,  Minit, 100,  (160*2*pi)^2, 'IsSymmetricDefinite', 1);
-    lambda = diag(lambda);
-    sqrt(lambda)/2/pi
+
+nModes = 400;
+[psi, lambda] = eigs(structModel.K,  structModel.M, nModes,  (160*2*pi)^2, 'IsSymmetricDefinite', 1);
+lambda = diag(lambda);
+% sqrt(lambda)/2/pi
+% lambda = lambda_solved;
+% psi = psi_solved;
+
 
 %%
+Dm = 100*ones(1,400);
+Dm_fitted = diag(-G_ss_Modal.A(size(G_ss_Modal.A)/2+1:end,size(G_ss_Modal.A)/2+1:end))
+Dm(modeIndex) = 6*mean(Dm_fitted);
+% Dm = 0.1*Dm;
+%%
 clear R FRF
+freq = logspace(0,5,10000);
+freq = freq(freq<1515*2*pi);
+gain = 130000000;
 
-freq = logspace(0,4,10000);
-Dm(1:length(lambda)) = 0;
 for ii = 1:length(freq)
     w = freq(ii);
-    for m = 1:100%length(lambda)
-        R(:,:,m) = psi(node_mapping.z(input_nodes_top),m)*(psi(node_mapping.z(input_nodes_top),m) - psi(node_mapping.z(input_nodes_back),m)  )';
+    for m = 1:nModes%length(lambda)
+        
+        Input = (psi(node_mapping.z(input_nodes_top),m) - psi(node_mapping.z(input_nodes_back),m)  );
+        Output = (psi(node_mapping.z(sensor_nodes_bottom),m) - psi(node_mapping.z(sensor_nodes_top),m)  )';
+       
+        R(:,:,m) = Input*Output;
        
         if m == 1
-            FRF(:,:,ii) = 10000000000* R(:,:,m)./( -w^2 + 1i*Dm(m)*w + lambda(m) );
+            FRF(:,:,ii) = gain* R(:,:,m)./( -w^2 + 1i*Dm(m)*w + lambda(m) );
             
         else
-            FRF(:,:,ii) = FRF(:,:,ii) +10000000000* R(:,:,m)./( -w^2 + 1i*Dm(m)*w + lambda(m) );
+
+            FRF(:,:,ii) = FRF(:,:,ii) +gain* R(:,:,m)./( -w^2 + 1i*Dm(m)*w + lambda(m) );
             
         end
     end
 end
+  
 
-%% 
-figure(10)
-semilogx(freq/2/pi,mag2db(abs(squeeze(FRF(5,5,:)))), 'LineWidth', 1)
-xscale log
-% xlim([100, 3000])
 %%
 FRF_file = 'G_bla_mech';
-
-
-
 
 save_result  = 'off';                   % 'on'/'off' to save result
 version      = 1;                      % version number of result file
@@ -48,4 +57,31 @@ end
 G_frf = load(FRF_file,FRF_name);
 
 [G_frf2,omega,Ts] = frdata(G_frf.(FRF_name));
-omega = omega/2/pi;
+
+%%
+sens_act_loc = [5    17    29     2     7    25];
+
+IM_gain = zeros(6,36);
+for jj = 1:6
+    for ii = 1:36 % %Start from 2 to omit frequency 0 (DC offset)
+        IM_gain(jj,ii) = mean(abs(G_frf2(jj,ii,1:10))); %Start from 2 to omit frequency 0 (DC offset)
+    end
+end
+Modes_modal_term = mean((abs(FRF(sens_act_loc,:,1:10))),3);
+R_res = (IM_gain -  Modes_modal_term)
+for ii = 1:length(freq)        
+    w = freq(ii);
+    FRF(sens_act_loc,:,ii) = FRF(sens_act_loc,:,ii) + R_res;
+end 
+%% 
+
+act_display = 2;
+
+clf(figure(10))
+figure(10)
+semilogx(freq/2/pi,mag2db(abs(squeeze(FRF(act_display,act_display,:)))), 'LineWidth', 1)
+hold on
+xscale log
+semilogx(omega(1:1515),mag2db(abs(squeeze(G_frf2(find(act_display==sens_act_loc),act_display,1:1515)))), 'LineWidth', 1)
+% xline([sqrt(lambda(1:25))/2/pi])
+% xlim([100, 3000])

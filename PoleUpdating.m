@@ -17,7 +17,7 @@ n_alpha = length(alpha_act);
 
 
 %% Optimization structure parameter;
-optimzOpts.tolFun = 1e-3;
+optimzOpts.tolFun = 1e-5;
 optimzOpts.tolX = 1e-5;
 optimzOpts.toolBox  = 'lsqnonlin';
 optimzOpts.optAlgorithm = 'trust-region-reflective';
@@ -27,56 +27,32 @@ optimzOpts.maxIter = 50e3;
 optimzOpts.maxFunEvals = 12e5;
 
 
-%% Simulate "experimental data" with old experiments
-% 
-% 
-% load("eigenFrequencies.mat")
-% freqExp = eigenFrequencies;
-% freqExp(4) = eigenFrequencies(5);
-% freqExp(5) = 176;
-% freqExp(6) = 176;
-% lambdaExp = (2*pi*(freqExp)).^2;
-% load("Modeshapes_V1.mat")
-% L(:,4) = L(:,5);
-% L(:,6) = L(:,5);
-% for i = 1:modeIndex(end)
-%     [m,index] = max(abs(L([1 2 3 5],i)));
-%     L(:,i) = L(:,i) / m;
-% end
-% 
-% 
-% psiExpAll = zeros(length(measDOFs),1);
-% n = 1;
-% for i = modeIndex
-% psiExpAll([1], n) = L(1,i);
-% psiExpAll([2], n) = L(2,i);
-% psiExpAll([3], n) = L(3,i);
-% psiExpAll([4], n) = L(5,i);
-% n = n+1;
-% end
-% 
-% psi_m = psiExpAll;
-% Simulate "experimental data" with new experiment data
-addpath("/Users/matthijsvandevosse/FRF_Balk_Processing/FRFs")
+%% Load experimental mode shapes and resonace frequencies
 
-load("G_ss_modal_fitted_2.mat")
+% Modal model fitted using Least Squared Optimalization
+load("G_ss_modal_fitted.mat")
 
+% load resonance frequencies 
 lambdaExp = diag(-G_ss_Modal.A(9:end,1:8));
 freqExp =sqrt(lambdaExp)/2/pi;
 
+% Convert rad/s to hz
+% lambdaExp = freqExp.^2;
+
+% Load sensor mode shapes
 L = G_ss_Modal.C(:,1:8);
+R = G_ss_Modal.B(9:end,:)';
 
-
-
-
-
-for i = 1:modeIndex(end)
-    [m,index] = max(abs(L([1 2 3 5],i)));
+% Normalize the sensor mode shapes, note that 4 sensor is used for
+% validation and not used to find maximum entry. 
+for i = 1:length(L)
+    [m,index] = max(abs(L([1 2 3 4 5],i)));
     L(:,i) = L(:,i) / m;
+    [m,index] = max(abs(R(:,i)));
+    R(:,i) = R(:,i) / m;
 end
 
-% L = flip(L,1);
-
+% Save mode shapes correctly to psi_m
 psiExpAll = zeros(length(measDOFs),1);
 n = 1;
 for i = modeIndex
@@ -86,11 +62,8 @@ psiExpAll([3], n) = L(3,i);
 psiExpAll([4], n) = L(5,i);
 n = n+1;
 end
-
 psi_m = [ psiExpAll(1,:); psiExpAll(2,:); psiExpAll(3,:); psiExpAll(4,:)];
 
-
-% psi_m = [psiExpAll(1,:); (psiExpAll(1,:) - psiExpAll(4,:)); (psiExpAll(2,:) - psiExpAll(3,:))];
 %%
 expModes.lambdaExp = lambdaExp(1:n_modes);
 expModes.psiExp = psi_m(:,1:n_modes);
@@ -100,18 +73,14 @@ unmeasDOFs = setdiff(1 : N, measDOFs(:,1));
 num_measDOFs = length(measDOFs);
 num_unmeasDOFs = length(unmeasDOFs);
 
-% expModes.lambdaWeights = [1 1 1];
-expModes.lambdaWeights = [30 30 20 20  15];
+
 expModes.lambdaWeights = [50 50 30 30 0 10];
 expModes.lambdaWeights = expModes.lambdaWeights(1:n_modes);
-% expModes.lambdaWeights = 2*[10 10 10 10];
-% expModes.psiWeights = [1 1 1];
+
 expModes.psiWeights = ones(n_modes,1);
 
-expModes.psiWeights = [1000 200 400 200 0.1 10];
 expModes.psiWeights = [2000 400 400 200 0 100 ];
 expModes.psiWeights = expModes.psiWeights(1:n_modes);
-% expModes.psiWeights = [1000 200 400 200];
 expModes.resWeights = ones(n_modes,1);
 
 
@@ -149,21 +118,8 @@ optimzOpts.x0 = 0.1*rand(n_x, 1);
 
 
 updtResults = StructModelUpdating(structModel, expModes, updatingOpts, optimzOpts);
+
 x = updtResults.xOpt;
 fval = updtResults.fvalOpt;
 optmzSolvOutput = updtResults.output;
     
-%%
-x_2 = x(1:n_alpha)
-
-
-Ksolved = (structModel.K0);
-for n = 1:n_alpha
-Ksolved = Ksolved + x_2(n)*(structModel.K_j{n});
-end
-
-structModel.K = Ksolved;
-
-[Psi_solved, lambdasolved] = eigs(Ksolved, structModel.M0, 10, 1e3);
-
-[Psi_o, lambda_o] = eigs(structModel.K0, structModel.M0, 10, 1e3);

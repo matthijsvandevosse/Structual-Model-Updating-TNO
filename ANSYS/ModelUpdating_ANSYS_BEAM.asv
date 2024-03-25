@@ -1,0 +1,163 @@
+clc;clear all; close all
+% close all
+warning('off')
+
+% Add path of SMU package
+addpath(genpath("/Users/matthijsvandevosse/Structual-Model-Updating_matthijs"))
+
+% Add path of ANSYS FEM file
+addpath("/Users/matthijsvandevosse/Library/CloudStorage/OneDrive-TUEindhoven/BEAM FEM")
+
+% Add path of Frequency response data and Modal Model
+addpath("/Users/matthijsvandevosse/Library/CloudStorage/OneDrive-TUEindhoven/FRF_Modal_Analysis/DATA_BEAM")
+%%
+
+Retrieve_K_M_Ansys
+
+%%
+
+N = size(Kinit,1);
+
+% measurement points --
+sensor_loc = [45 145 245 345 445]/1000;
+update_sensor_loc = [45 145 245 445]/1000;
+val_sensor_loc_x = 345/1000;
+
+
+act_loc_x = [50  250  450]/1000;
+act_loc_x = [50  249  450]/1000;
+
+[~, idx] = min(abs( coord(output_nodes,1)+0.25 - update_sensor_loc(:)'));
+measDOFs = node_mapping.z(output_nodes(idx));
+[~, idx] = min(abs( coord(output_nodes,1)+0.25 - act_loc_x(:)'));
+
+actDOFs = node_mapping.z(output_nodes(idx));
+[~, idx] = min(abs( coord(output_nodes,1)+0.25 - val_sensor_loc_x(:)'));
+nonmeasDOFs = node_mapping.z(output_nodes(idx));
+
+% relative mode shapes
+% measDOFs = [measDOFs(1), 0; measDOFs(1), measDOFs(4); measDOFs(2), measDOFs(3)];
+
+% absolute mode shapes
+measDOFs = [ measDOFs(1), 0; measDOFs(2), 0; measDOFs(3), 0; measDOFs(4), 0];
+
+
+
+
+%%
+PoleUpdating
+
+%% Plot mode shapes
+plot_modeshapes
+
+pause(0.5)
+
+
+%%
+% Use new measurements
+load(['/Users/matthijsvandevosse/Library/CloudStorage/OneDrive-TUEindhoven/FRF_Modal_Analysis/DATA_BEAM/ResponseData0_04.mat'])
+
+% Remove phase delay
+for i = 1:length(G_bla.Frequency)
+    new_angle = angle(G_bla.ResponseData(:,:,i))+(1.8/1000)*ones(5,3).*G_bla.Frequency(i)*2*pi;
+    G_bla.ResponseData(:,:,i) = abs(G_bla.ResponseData(:,:,i)).*exp(1i*new_angle);
+end
+
+% Remove last 10 samples
+G_exp = G_bla.ResponseData(:,:,1:length(G_bla.ResponseData)-10);
+Gfrf_mag = abs(G_bla.ResponseData(:,:,1:length(G_bla.ResponseData)-10));
+Gfrf_pha = angle(G_bla.ResponseData(:,:,1:length(G_bla.ResponseData)-10));
+ffrf =  G_bla.Frequency(1:length(G_bla.ResponseData)-10)*2*pi;
+
+[hm_mag , hm_pha ] = bode(G_ss_Modal, ffrf);
+G_m =  freqresp(G_ss_Modal, ffrf);
+%%
+
+ModalForm
+
+%%
+
+%%
+close all
+
+figure('Renderer', 'painters', 'Position', [10 10 1000 500])
+ny = 5;
+nu =3;
+tiledlayout(ny,nu,'TileSpacing','Compact','Padding','Compact');
+
+
+for i = 1:ny
+    for j = 1:1:nu
+        nexttile
+        hold on
+
+        set(gca, 'XScale', 'log')
+
+        plot(ffrf,squeeze(mag2db(Gfrf_mag(i,j,:))),    'LineWidth', .5, Color=	"#EDB120")
+        plot(ffrf,mag2db(squeeze(G0_mag(i,j,:))), ':k', 'LineWidth',.5)
+        plot(ffrf,mag2db(squeeze(G_mag(i,j,:))),'LineWidth',.5, Color="#0072BD")
+
+
+        if i==ny
+            if j == 2
+                % xlabel('omega [Hz]')
+            end
+        else
+            xticklabels({})
+        end
+        if j==1
+            if i == 3
+                % ylabel('Mag [dB]')
+            end
+        else
+            yticklabels({})
+        end
+        ylim([-100 50])
+        xlim([ffrf(1) ffrf(end-1)])
+
+        set(gca, 'Fontsize', 12)
+        set(gca, 'LineWidth', 1.25)
+        box on
+        set(gca,'linewidth',1)
+    end
+end
+
+
+
+%%
+figure('Renderer', 'painters', 'Position', [10 10 1000 500])
+tiledlayout(ny,nu,'TileSpacing','Compact','Padding','Compact');
+for i = 1:ny
+    for j = 1:1:nu
+        nexttile
+        hold on
+
+        set(gca, 'XScale', 'log')
+
+        plot(ffrf,squeeze((Gfrf_pha(i,j,:))),    'LineWidth', .5, Color=	"#EDB120")
+        plot(ffrf,(squeeze(G0_pha(i,j,:))), ':k', 'LineWidth',.5)
+        plot(ffrf,(squeeze(G_pha(i,j,:))),'LineWidth',.5, Color="#0072BD")
+
+
+        if i==ny
+            if j == 2
+                % xlabel('omega [Hz]')
+            end
+        else
+            xticklabels({})
+        end
+        if j==1
+            if i == 3
+                % ylabel('Phase [rad]')
+            end
+        else
+            yticklabels({})
+        end
+        xlim([ffrf(1) ffrf(end)])
+
+        set(gca, 'Fontsize', 6)
+        set(gca, 'LineWidth', 1.25)
+        box on
+        set(gca,'linewidth',.5)
+    end
+end

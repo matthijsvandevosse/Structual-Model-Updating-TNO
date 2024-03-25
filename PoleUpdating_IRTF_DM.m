@@ -1,8 +1,12 @@
-%% Load Sensitivity matrix
 
 modeIndex = [8; 16; 18; 21; 28]; % Indexes of these measured modes
-modeIndex = [8; 16; 18; 28]; % Indexes of these measured modes
+modeIndex = [8; 16; 18; 28]; % Indexes of these simulated modes
+
+modeIndex_m = [2 7 8 10]; % Indexes of these measured modes
+
+
 n_modes = length(modeIndex); % Number of measured modes
+structModel.FirstMode = 150; % Hertz, used for eigs function initializion;
 %% Assemble structure matrices
 
 structModel.M0 = sparse(Minit);
@@ -32,13 +36,13 @@ optimzOpts.maxFunEvals = 12e5;
 %% Simulate "experimental data" with old experiments
 
 
-load("G_ss_Modal_fitted_4.mat")
+load("G_ss_Modal_fitted_5.mat")
 
 lambdaExp = diag(-G_ss_Modal.A(size(G_ss_Modal.A)/2+1:end,1:size(G_ss_Modal.A)/2));
 freqExp =sqrt(lambdaExp)/2/pi;
 
 %conversion to rad/sec
-lambdaExp = (freqExp*2*pi*2*pi).^2
+lambdaExp = (freqExp*2*pi*2*pi).^2;
 
 L = G_ss_Modal.C(:,1:size(G_ss_Modal.A)/2);
 R = G_ss_Modal.B(size(G_ss_Modal.B)/2+1:end,:);
@@ -46,9 +50,12 @@ R = G_ss_Modal.B(size(G_ss_Modal.B)/2+1:end,:);
 
 %%
 
-psi_m = [R(1:3,:); R(5,:)]';
+% psi_m = [R([2 7 8 10],:)]';
+psi_m = [R(modeIndex_m,:)]';
 
-lambdaExp = [lambdaExp(1:3); lambdaExp(5)];
+% lambdaExp = [lambdaExp([2 7 8 10])];
+lambdaExp = [lambdaExp(modeIndex_m)];
+
 %%
 expModes.lambdaExp = lambdaExp(1:n_modes);
 expModes.psiExp = psi_m(:,1:n_modes);
@@ -60,12 +67,12 @@ num_unmeasDOFs = length(unmeasDOFs);
 
 
 
-expModes.lambdaWeights = 10*[1 1 1 1];
+expModes.lambdaWeights = 100*[1 1 1 1 1];
 expModes.lambdaWeights = expModes.lambdaWeights(1:n_modes);
 
 expModes.psiWeights = ones(n_modes,1);
 
-expModes.psiWeights = [1 1 1 1 ];
+expModes.psiWeights = 10*[1 1 1 1 1 ];
 expModes.psiWeights = expModes.psiWeights(1:n_modes);
 
 expModes.resWeights = ones(n_modes,1);
@@ -85,8 +92,8 @@ updatingOpts.modeMatch = 2;      % 1: Without forced matching;
 updatingOpts.simModesForExpMatch = modeIndex;
 
 if(updatingOpts.formID < 3)
-    updatingOpts.x_lb = -5*ones(n_alpha,1);
-    updatingOpts.x_ub =  5*ones(n_alpha,1);
+    updatingOpts.x_lb = -3.5*ones(n_alpha,1);
+    updatingOpts.x_ub =  15*ones(n_alpha,1);
     
 else
     updatingOpts.x_lb = [-2*ones(n_alpha,1); -2* ones(num_unmeasDOFs * n_modes,1)];
@@ -104,6 +111,7 @@ n_x = length(updatingOpts.x_lb);
 % zero initialization
 optimzOpts.x0 = zeros(n_x, 1);
 
+
 % random initialization
 % optimzOpts.x0 = 0.05*rand(n_x, 1);
 
@@ -113,22 +121,8 @@ x = updtResults.xOpt;
 fval = updtResults.fvalOpt;
 optmzSolvOutput = updtResults.output;
     
+% x = optimzOpts.x0;
 %%
 
 x_k = (x(1:n_alpha))
 % x_m = x(n_alpha+1,end)
-%%
-structModel.K = structModel.K0;
-for i = 1 : length(alpha_act)
-    structModel.K = structModel.K + x(i) * structModel.K_j{i};
-end
-
-structModel.M = structModel.M0;
-for i = 1 : length(structModel.M_j)
-    structModel.M = structModel.M + x(i + length(alpha_act)) * structModel.M_j{i};
-end
-
-
-[psi_solved, lambda_solved] = eigs(structModel.K,  structModel.M, max(modeIndex),  (160*2*pi)^2, 'IsSymmetricDefinite', 1);
-[psi_o, lambda_o] = eigs(structModel.K0,  structModel.M0, max(modeIndex),  (160*2*pi)^2, 'IsSymmetricDefinite', 1);
-

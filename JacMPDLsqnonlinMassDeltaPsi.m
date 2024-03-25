@@ -198,7 +198,6 @@ for i = 1 : n_modes
             % derivatives," AIAA journal, vol. 14, pp. 1201-1205, 1976.
             c = -simModes.psi(:,i)' *  v ;
             dPsi_dAlpha_j = v + c * simModes.psi(:,i);
-            dPsi_m(:, j, i) = dPsi_dAlpha_j(1 : n_meas);
             
             dPsi_m1(:, j, i) = full(dPsi_dAlpha_j(expModes.measDOFs(:,1)));
 

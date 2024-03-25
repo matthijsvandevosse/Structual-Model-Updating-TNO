@@ -4,29 +4,65 @@
 %
 %
 %
+nModes = 50;
+data_opt.G_ref = G_bla;
+
 sensorloc.Model = [measDOFs(1) measDOFs(3) measDOFs(4)];
 sensorloc.Data = [1 3 5];
-freq = 10:6:28;
-% freq = [15 18 20];
-structModel.D0 = 4.8e-2;
+freq = [10 15 20 25 30 ];% 40 50 100 200 300];
+% freq = 12;
 n = 0;
-clear structModel.alpha{n} structModel.Z{n}
-for index = freq
+structModel.alpha = [];
+structModel.Z = [];
+
+[Psi_solved, lambdasolved] = eigs(structModel.K, structModel.M0,nModes,1e3);
+
+[lambdasolved,dummyInd] = sort(diag(lambdasolved), 'ascend');
+
+Psi_solved = Psi_solved(:,dummyInd);
+
+for i = 1:size(Psi_solved,2)
+    m = (Psi_solved(:,i))'*full(structModel.M0)*(Psi_solved(:,i));
+    Psi_solved(:,i) = Psi_solved(:,i)./sqrt(m);
+    Dm(i,i) = Psi_solved(:,i)'*structModel.D0*Psi_solved(:,i);
+end
+
+
+clear R G
+
+
+for ii = freq
     n = n+1;
-    omega = data_opt.G_ref.Frequency(index)*2*pi;
-    structModel.alpha{n} =  inv((-omega^2*structModel.M + structModel.K)/30000);
-    structModel.Z{n} = (-omega^2*structModel.M + structModel.K)/30000;
+    w = data_opt.G_ref.Frequency(ii)*2*pi;
+    for m = 1:nModes%length(lambda)
+        R = Psi_solved(:,m)*Psi_solved(:,m)';
+        if m == 1
+             structModel.alpha{n} = gain* R./( -w^2 + 1i*Dm(m,m)*w + lambdasolved(m) );
+        else
+             structModel.alpha{n} =  structModel.alpha{n} + gain* R./( -w^2 + 1i*Dm(m,m)*w + lambdasolved(m) );  
+        end
+    end
+        structModel.Z{n} = (-w^2*structModel.M + structModel.K)./gain;
 end
-%% 0.0045 - 2373.07
-structModel.deltaS = [];
-test = zeros(N,N);
-loc = [0 0.125 0.25 0.375 0.5];
-loc = [0 0.5];
-for i = 1:length(loc)-1
-nodes = [structuralmodelinit.Mesh.Nodes(1,:)  <= loc(i+1) & structuralmodelinit.Mesh.Nodes(1,:)  > loc(i)];
- structModel.deltaS{i} = diag([nodes nodes]);
- % structModel.deltaS{i-1+length(loc)} = diag([ nodes zeros(1,N/2)]);
-end
+
+
+
+%% 
+strut_damping1 = 4e4;
+strut_damping2 = 20e3;
+
+strut_nodes1 = nodes(coord(:,1) > .25);
+strut_nodes2 = nodes(coord(:,2)<0);
+
+% structModel.D0(strut_nodes1,strut_nodes1) = strut_damping1*structModel.D0(strut_nodes1,strut_nodes1);
+% structModel.D0(strut_nodes2,strut_nodes2) = strut_damping2*structModel.D0(strut_nodes2,strut_nodes2);
+
+% structModel.deltaS{1} = sparse(0.*structModel.D0);
+% structModel.deltaS{1}(strut_nodes1,strut_nodes1) = structModel.D0(strut_nodes1,strut_nodes1);
+% structModel.deltaS{2} = sparse(0.*structModel.D0);
+% structModel.deltaS{2}(strut_nodes2,strut_nodes2) = structModel.D0(strut_nodes2,strut_nodes2);
+structModel.deltaS{1} = sparse(.1.*structModel.D0);
+
 
 
 %%

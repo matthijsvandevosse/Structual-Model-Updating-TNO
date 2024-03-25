@@ -75,7 +75,7 @@ for i = 1 : n_modes
     end
     
     if (objOpt == 1) % MAC value formulation
-        MACi = MAC(expModes.psiExp(:,i), simModes.psi_m(:,i));
+        MACi = MAC(expModes.psiExp(:,i), simModes.psi_m(:,i))
 
         MACterm = expModes.psiWeights(i) * (1 - sqrt(MACi)) ./ sqrt(MACi);
         
